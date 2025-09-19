@@ -1,14 +1,68 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Dashboard } from './Dashboard';
+import { Assessment } from './Assessment';
+import { Results } from './Results';
+import { Business, ESGResponse } from '@/types/esg';
 
 const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState<'dashboard' | 'assessment' | 'results'>('dashboard');
+  const [business, setBusiness] = useState<Business | null>(null);
+  const [assessmentResults, setAssessmentResults] = useState<ESGResponse[]>([]);
+  const [hasCompletedAssessment, setHasCompletedAssessment] = useState(false);
+
+  const handleStartAssessment = () => {
+    setCurrentPage('assessment');
+  };
+
+  const handleAssessmentComplete = (businessData: Business, responses: ESGResponse[]) => {
+    setBusiness(businessData);
+    setAssessmentResults(responses);
+    setHasCompletedAssessment(true);
+    setCurrentPage('results');
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentPage('dashboard');
+  };
+
+  const handleViewResults = () => {
+    if (hasCompletedAssessment) {
+      setCurrentPage('results');
+    }
+  };
+
+  const handleRetakeAssessment = () => {
+    setCurrentPage('assessment');
+  };
+
+  switch (currentPage) {
+    case 'assessment':
+      return (
+        <Assessment 
+          onComplete={handleAssessmentComplete}
+          onBack={handleBackToDashboard}
+        />
+      );
+    case 'results':
+      return business && assessmentResults.length > 0 ? (
+        <Results
+          business={business}
+          responses={assessmentResults}
+          onBack={handleBackToDashboard}
+          onRetakeAssessment={handleRetakeAssessment}
+        />
+      ) : null;
+    default:
+      return (
+        <Dashboard
+          onStartAssessment={handleStartAssessment}
+          onViewResults={handleViewResults}
+          hasCompletedAssessment={hasCompletedAssessment}
+        />
+      );
+  }
 };
 
 export default Index;
