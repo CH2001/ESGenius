@@ -12,7 +12,22 @@ export interface LambdaESGScoring {
   socialScore: number;
   governanceScore: number;
   complianceLevel: 'Excellent' | 'Good' | 'Fair' | 'Needs Improvement';
-  recommendations: string[];
+  recommendations: Array<{
+    id: string;
+    type: string;
+    title: string;
+    description: string;
+    priority: string;
+    estimatedImpact: string;
+    timeframe: string;
+    requiredActions: string[];
+    relatedCriteria: string[];
+    resources: Array<{
+      title: string;
+      type: string;
+      description: string;
+    }>;
+  }>;
   gaps: string[];
   actionItems: {
     priority: 'High' | 'Medium' | 'Low';
@@ -127,6 +142,67 @@ class LambdaService {
     const totalResponses = data.responses.length;
     const avgScore = data.responses.reduce((sum, r) => sum + r.score, 0) / totalResponses;
     
+    // Generate comprehensive mock recommendations
+    const mockRecommendations = [
+      {
+        id: 'rec_001',
+        type: 'improvement',
+        title: 'Implement Energy Management System',
+        description: 'Establish systematic tracking and reduction of energy consumption across all operations',
+        priority: 'high',
+        estimatedImpact: '10-15% reduction in energy costs and 8-12% reduction in carbon footprint',
+        timeframe: '3-6 months',
+        requiredActions: [
+          'Install smart sub-metering systems',
+          'Conduct comprehensive energy audit',
+          'Set measurable reduction targets',
+          'Train staff on energy monitoring'
+        ],
+        relatedCriteria: ['Environmental Management', 'Energy Efficiency'],
+        resources: [
+          { title: 'Energy Audit Guide', type: 'document', description: 'Comprehensive guide for conducting energy audits' }
+        ]
+      },
+      {
+        id: 'rec_002', 
+        type: 'improvement',
+        title: 'Enhance Workplace Safety Program',
+        description: 'Strengthen safety training and incident reporting systems to improve workplace culture',
+        priority: 'high',
+        estimatedImpact: '50% reduction in workplace incidents and 20% decrease in insurance premiums',
+        timeframe: '2-4 months',
+        requiredActions: [
+          'Update safety protocols and procedures',
+          'Increase training frequency to monthly',
+          'Implement digital incident reporting system',
+          'Conduct regular safety audits'
+        ],
+        relatedCriteria: ['Workplace Safety', 'Employee Welfare'],
+        resources: [
+          { title: 'DOSH Safety Guidelines', type: 'website', description: 'Malaysian workplace safety regulations' }
+        ]
+      },
+      {
+        id: 'rec_003',
+        type: 'improvement', 
+        title: 'Develop ESG Governance Framework',
+        description: 'Establish formal ESG governance structure with clear responsibilities and reporting',
+        priority: 'medium',
+        estimatedImpact: 'Improved ESG performance tracking and 25% better compliance scores',
+        timeframe: '4-8 months',
+        requiredActions: [
+          'Form ESG steering committee',
+          'Define ESG policies and procedures', 
+          'Implement quarterly ESG reporting',
+          'Establish stakeholder engagement process'
+        ],
+        relatedCriteria: ['Corporate Governance', 'ESG Management'],
+        resources: [
+          { title: 'ESG Governance Best Practices', type: 'document', description: 'Guide to establishing ESG governance' }
+        ]
+      }
+    ];
+    
     return {
       scoring: {
         overallScore: Math.round(avgScore),
@@ -134,11 +210,7 @@ class LambdaService {
         socialScore: Math.round(avgScore * 1.1),
         governanceScore: Math.round(avgScore * 0.95),
         complianceLevel: avgScore >= 80 ? 'Excellent' : avgScore >= 60 ? 'Good' : avgScore >= 40 ? 'Fair' : 'Needs Improvement',
-        recommendations: [
-          'Implement energy monitoring system',
-          'Develop diversity and inclusion policy',
-          'Establish ESG governance committee'
-        ],
+        recommendations: mockRecommendations,
         gaps: [
           'Missing carbon footprint tracking',
           'No formal sustainability reporting',

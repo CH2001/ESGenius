@@ -59,20 +59,20 @@ export const Results: React.FC<ResultsProps> = ({
   // Generate recommendations from Lambda or use mock data
   const generateRecommendations = (): ESGRecommendation[] => {
     if (lambdaResponse?.scoring?.recommendations && Array.isArray(lambdaResponse.scoring.recommendations)) {
-      // Convert Lambda recommendations to our format with proper null checking
+      // Handle new Lambda recommendation objects
       return lambdaResponse.scoring.recommendations
-        .filter((rec: any) => rec && typeof rec === 'string')
-        .map((rec: string, index: number) => ({
-          id: `lambda-rec-${index}`,
-          type: 'improvement' as const,
-          title: rec,
-          description: rec,
-          priority: 'medium' as const,
-          estimatedImpact: 'AI-generated recommendation',
-          timeframe: '3-6 months',
-          requiredActions: [],
-          relatedCriteria: [],
-          resources: []
+        .filter((rec: any) => rec && typeof rec === 'object')
+        .map((rec: any, index: number) => ({
+          id: rec.id || `lambda-rec-${index}`,
+          type: rec.type || 'improvement',
+          title: rec.title || 'AI-Generated Recommendation',
+          description: rec.description || 'AI-generated recommendation based on your assessment',
+          priority: rec.priority || 'medium',
+          estimatedImpact: rec.estimatedImpact || 'Positive impact on ESG performance',
+          timeframe: rec.timeframe || '3-6 months',
+          requiredActions: rec.requiredActions || ['Review current practices', 'Implement recommended changes'],
+          relatedCriteria: rec.relatedCriteria || [],
+          resources: rec.resources || []
         }));
     }
 

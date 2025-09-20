@@ -21,13 +21,16 @@ class ESGScoring:
     
 @dataclass
 class ESGRecommendation:
-    category: str
+    id: str
+    type: str  # 'improvement', 'grant', 'market_opportunity', 'certification'
     title: str
     description: str
-    priority: str
-    impact: str
+    priority: str  # 'high', 'medium', 'low'
+    estimatedImpact: str
     timeframe: str
-    required_actions: List[str]
+    requiredActions: List[str]
+    relatedCriteria: List[str]
+    resources: List[Dict[str, str]]
     
 @dataclass
 class GrantOpportunity:
@@ -122,13 +125,16 @@ class ESGProcessor:
         
         Return as JSON array with format:
         [{{
-            "category": "Environmental|Social|Governance",
+            "id": "rec_001",
+            "type": "improvement",
             "title": "Short recommendation title",
             "description": "Detailed recommendation description",
-            "priority": "High|Medium|Low",
-            "impact": "Expected impact description",
-            "timeframe": "Implementation timeframe",
-            "required_actions": ["Action 1", "Action 2", "Action 3"]
+            "priority": "high|medium|low",
+            "estimatedImpact": "Expected impact description with specific metrics",
+            "timeframe": "Implementation timeframe (e.g., 3-6 months)",
+            "requiredActions": ["Specific action 1", "Specific action 2", "Specific action 3"],
+            "relatedCriteria": ["Environmental management", "Energy efficiency"],
+            "resources": [{{"title": "Resource name", "type": "document", "description": "Resource description"}}]
         }}]
         """
         
@@ -154,7 +160,22 @@ class ESGProcessor:
             # Parse JSON from LLM response
             recommendations_data = self._extract_json_from_text(recommendations_text)
             
-            return [ESGRecommendation(**rec) for rec in recommendations_data[:5]]
+            # Convert to ESGRecommendation objects with proper field mapping
+            recommendations = []
+            for i, rec in enumerate(recommendations_data[:5]):
+                recommendations.append(ESGRecommendation(
+                    id=rec.get('id', f'rec_{i+1:03d}'),
+                    type=rec.get('type', 'improvement'),
+                    title=rec.get('title', 'ESG Improvement'),
+                    description=rec.get('description', 'No description available'),
+                    priority=rec.get('priority', 'medium').lower(),
+                    estimatedImpact=rec.get('estimatedImpact', 'Positive impact on ESG score'),
+                    timeframe=rec.get('timeframe', '3-6 months'),
+                    requiredActions=rec.get('requiredActions', ['Review current practices', 'Implement improvements']),
+                    relatedCriteria=rec.get('relatedCriteria', []),
+                    resources=rec.get('resources', [])
+                ))
+            return recommendations
             
         except Exception as e:
             logger.error(f"Error generating recommendations: {str(e)}")
@@ -326,22 +347,40 @@ class ESGProcessor:
         """Provide fallback recommendations"""
         return [
             ESGRecommendation(
-                category="Environmental",
+                id="rec_001",
+                type="improvement",
                 title="Implement Energy Management System",
-                description="Establish systematic tracking and reduction of energy consumption",
-                priority="High",
-                impact="10-15% energy cost reduction",
+                description="Establish systematic tracking and reduction of energy consumption across all operations",
+                priority="high",
+                estimatedImpact="10-15% reduction in energy costs and 8-12% reduction in carbon footprint",
                 timeframe="3-6 months",
-                required_actions=["Install sub-metering", "Conduct energy audit", "Set reduction targets"]
+                requiredActions=["Install smart sub-metering systems", "Conduct comprehensive energy audit", "Set measurable reduction targets", "Train staff on energy monitoring"],
+                relatedCriteria=["Environmental Management", "Energy Efficiency"],
+                resources=[{"title": "Energy Audit Guide", "type": "document", "description": "Comprehensive guide for conducting energy audits"}]
             ),
             ESGRecommendation(
-                category="Social",
+                id="rec_002",
+                type="improvement",
                 title="Enhance Workplace Safety Program",
-                description="Strengthen safety training and incident reporting systems",
-                priority="High", 
-                impact="Reduced workplace incidents and insurance costs",
+                description="Strengthen safety training and incident reporting systems to improve workplace culture",
+                priority="high",
+                estimatedImpact="50% reduction in workplace incidents and 20% decrease in insurance premiums",
                 timeframe="2-4 months",
-                required_actions=["Update safety protocols", "Increase training frequency", "Implement reporting system"]
+                requiredActions=["Update safety protocols and procedures", "Increase training frequency to monthly", "Implement digital incident reporting system", "Conduct regular safety audits"],
+                relatedCriteria=["Workplace Safety", "Employee Welfare"],
+                resources=[{"title": "DOSH Safety Guidelines", "type": "website", "description": "Malaysian workplace safety regulations"}]
+            ),
+            ESGRecommendation(
+                id="rec_003",
+                type="improvement",
+                title="Develop ESG Governance Framework",
+                description="Establish formal ESG governance structure with clear responsibilities and reporting",
+                priority="medium",
+                estimatedImpact="Improved ESG performance tracking and 25% better compliance scores",
+                timeframe="4-8 months",
+                requiredActions=["Form ESG steering committee", "Define ESG policies and procedures", "Implement quarterly ESG reporting", "Establish stakeholder engagement process"],
+                relatedCriteria=["Corporate Governance", "ESG Management"],
+                resources=[{"title": "ESG Governance Best Practices", "type": "document", "description": "Guide to establishing ESG governance"}]
             )
         ]
     
