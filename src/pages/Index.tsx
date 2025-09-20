@@ -60,6 +60,7 @@ const Index = () => {
           onStartAssessment={handleStartAssessment}
           onViewResults={handleViewResults}
           hasCompletedAssessment={hasCompletedAssessment}
+          business={business}
         />
       );
   }

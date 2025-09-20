@@ -5,16 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Building2, Users, MapPin, Calendar } from 'lucide-react';
+import { Building2, Users, MapPin, Calendar, DollarSign, FileText, ArrowLeft } from 'lucide-react';
 import { Business } from '@/types/esg';
+import { CompetitorDetails } from './CompetitorDetails';
 
 interface BusinessRegistrationFormProps {
-  onSubmit: (business: Business) => void;
+  onComplete: (business: Business) => void;
+  onBack?: () => void;
 }
 
-export const BusinessRegistrationForm: React.FC<BusinessRegistrationFormProps> = ({
-  onSubmit
-}) => {
+export const BusinessRegistrationForm: React.FC<BusinessRegistrationFormProps> = ({ onComplete, onBack }) => {
   const [formData, setFormData] = useState({
     name: '',
     industry: '',
@@ -27,39 +27,36 @@ export const BusinessRegistrationForm: React.FC<BusinessRegistrationFormProps> =
     description: ''
   });
 
+  // Mock competitor data
+  const mockCompetitors = [
+    {
+      name: 'EcoTech Solutions',
+      industry: formData.industry || 'Technology',
+      esgScore: 82,
+      strengths: ['Renewable Energy', 'Waste Reduction', 'Employee Welfare'],
+      marketPosition: 'Market Leader in Sustainable Tech'
+    },
+    {
+      name: 'Green Manufacturing Co.',
+      industry: formData.industry || 'Manufacturing', 
+      esgScore: 76,
+      strengths: ['Carbon Neutral', 'Local Sourcing', 'Community Programs'],
+      marketPosition: 'Regional Sustainability Champion'
+    }
+  ];
+
   const industries = [
     'Manufacturing',
     'Technology',
-    'Agriculture & Food Processing',
+    'Agriculture',
     'Construction',
-    'Retail & Wholesale',
     'Healthcare',
     'Education',
-    'Tourism & Hospitality',
-    'Financial Services',
-    'Professional Services',
-    'Transportation & Logistics',
-    'Energy & Utilities',
+    'Finance',
+    'Retail',
+    'Transportation',
+    'Energy',
     'Other'
-  ];
-
-  const malaysianStates = [
-    'Kuala Lumpur',
-    'Selangor',
-    'Johor',
-    'Penang',
-    'Sabah',
-    'Sarawak',
-    'Perak',
-    'Kedah',
-    'Kelantan',
-    'Terengganu',
-    'Pahang',
-    'Negeri Sembilan',
-    'Melaka',
-    'Perlis',
-    'Putrajaya',
-    'Labuan'
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -72,168 +69,184 @@ export const BusinessRegistrationForm: React.FC<BusinessRegistrationFormProps> =
       size: formData.size as 'micro' | 'small' | 'medium',
       location: formData.location,
       employees: parseInt(formData.employees) || 0,
-      revenue: parseInt(formData.revenue) || 0,
+      revenue: parseFloat(formData.revenue) || 0,
       establishedYear: parseInt(formData.establishedYear) || new Date().getFullYear(),
       registrationNumber: formData.registrationNumber
     };
 
-    onSubmit(business);
+    onComplete(business);
   };
 
-  const updateField = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return (
-    <Card className="max-w-2xl mx-auto shadow-medium">
-      <CardHeader className="text-center space-y-2">
-        <CardTitle className="text-2xl text-primary flex items-center justify-center gap-2">
-          <Building2 className="h-6 w-6" />
-          Business Registration
-        </CardTitle>
-        <p className="text-muted-foreground">
-          Register your business to begin ESG compliance assessment
-        </p>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Business Name *</Label>
-                <Input
-                  id="name"
-                  placeholder="Enter your business name"
-                  value={formData.name}
-                  onChange={(e) => updateField('name', e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="registration">Registration Number *</Label>
-                <Input
-                  id="registration"
-                  placeholder="e.g., 123456-X"
-                  value={formData.registrationNumber}
-                  onChange={(e) => updateField('registrationNumber', e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+    <div className="min-h-screen bg-background py-8 px-4">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header with Back Button */}
+        {onBack && (
+          <Button 
+            variant="ghost" 
+            onClick={onBack}
+            className="flex items-center gap-2 text-primary hover:text-primary-light"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+        )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Industry *</Label>
-                <Select value={formData.industry} onValueChange={(value) => updateField('industry', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your industry" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {industries.map((industry) => (
-                      <SelectItem key={industry} value={industry}>
-                        {industry}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Business Size *</Label>
-                <Select value={formData.size} onValueChange={(value) => updateField('size', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select business size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="micro">Micro (≤5 employees)</SelectItem>
-                    <SelectItem value="small">Small (6-75 employees)</SelectItem>
-                    <SelectItem value="medium">Medium (76-200 employees)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
+        <Card className="shadow-medium">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-primary flex items-center justify-center gap-2">
+              <Building2 className="h-6 w-6" />
+              Business Registration
+            </CardTitle>
+            <p className="text-muted-foreground">
+              Tell us about your business to get personalized ESG recommendations
+            </p>
+          </CardHeader>
+          
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-medium">Company Name *</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Enter your company name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    required
+                    className="shadow-soft"
+                  />
+                </div>
 
-          {/* Location & Demographics */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <MapPin className="h-4 w-4 text-primary" />
-              <h3 className="font-medium text-foreground">Location & Size</h3>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>State/Location *</Label>
-                <Select value={formData.location} onValueChange={(value) => updateField('location', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {malaysianStates.map((state) => (
-                      <SelectItem key={state} value={state}>
-                        {state}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="employees">Number of Employees</Label>
-                <Input
-                  id="employees"
-                  type="number"
-                  placeholder="e.g., 25"
-                  value={formData.employees}
-                  onChange={(e) => updateField('employees', e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="revenue">Annual Revenue (RM)</Label>
-                <Input
-                  id="revenue"
-                  type="number"
-                  placeholder="e.g., 1500000"
-                  value={formData.revenue}
-                  onChange={(e) => updateField('revenue', e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
+                <div className="space-y-2">
+                  <Label htmlFor="registrationNumber" className="text-sm font-medium">Registration Number *</Label>
+                  <Input
+                    id="registrationNumber"
+                    type="text"
+                    placeholder="e.g., 202301234567 (1234567-A)"
+                    value={formData.registrationNumber}
+                    onChange={(e) => handleInputChange('registrationNumber', e.target.value)}
+                    required
+                    className="shadow-soft"
+                  />
+                </div>
 
-          {/* Additional Details */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar className="h-4 w-4 text-primary" />
-              <h3 className="font-medium text-foreground">Additional Information</h3>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="established">Established Year</Label>
-              <Input
-                id="established"
-                type="number"
-                placeholder="e.g., 2015"
-                value={formData.establishedYear}
-                onChange={(e) => updateField('establishedYear', e.target.value)}
-                min="1900"
-                max={new Date().getFullYear()}
-              />
-            </div>
-          </div>
+                <div className="space-y-2">
+                  <Label htmlFor="industry" className="text-sm font-medium">Industry *</Label>
+                  <Select value={formData.industry} onValueChange={(value) => handleInputChange('industry', value)}>
+                    <SelectTrigger className="shadow-soft">
+                      <SelectValue placeholder="Select your industry" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {industries.map((industry) => (
+                        <SelectItem key={industry} value={industry}>
+                          {industry}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-          {/* Submit Button */}
-          <div className="flex justify-center pt-4">
-            <Button
-              type="submit"
-              className="w-full md:w-auto px-8 bg-primary hover:bg-primary-light"
-              disabled={!formData.name || !formData.industry || !formData.size || !formData.registrationNumber}
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Continue to ESG Assessment
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="size" className="text-sm font-medium">Company Size *</Label>
+                  <Select value={formData.size} onValueChange={(value) => handleInputChange('size', value)}>
+                    <SelectTrigger className="shadow-soft">
+                      <SelectValue placeholder="Select company size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="micro">Micro (≤ 5 employees, ≤ RM 300k revenue)</SelectItem>
+                      <SelectItem value="small">Small (6-30 employees, ≤ RM 15M revenue)</SelectItem>
+                      <SelectItem value="medium">Medium (31-200 employees, ≤ RM 50M revenue)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="location" className="text-sm font-medium">Location *</Label>
+                  <Input
+                    id="location"
+                    type="text"
+                    placeholder="e.g., Kuala Lumpur, Malaysia"
+                    value={formData.location}
+                    onChange={(e) => handleInputChange('location', e.target.value)}
+                    required
+                    className="shadow-soft"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="employees" className="text-sm font-medium">Number of Employees *</Label>
+                  <Input
+                    id="employees"
+                    type="number"
+                    placeholder="Enter number of employees"
+                    value={formData.employees}
+                    onChange={(e) => handleInputChange('employees', e.target.value)}
+                    required
+                    min="1"
+                    className="shadow-soft"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="revenue" className="text-sm font-medium">Annual Revenue (RM) *</Label>
+                  <Input
+                    id="revenue"
+                    type="number"
+                    placeholder="Enter annual revenue in RM"
+                    value={formData.revenue}
+                    onChange={(e) => handleInputChange('revenue', e.target.value)}
+                    required
+                    min="0"
+                    className="shadow-soft"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="establishedYear" className="text-sm font-medium">Year Established *</Label>
+                  <Input
+                    id="establishedYear"
+                    type="number"
+                    placeholder="e.g., 2020"
+                    value={formData.establishedYear}
+                    onChange={(e) => handleInputChange('establishedYear', e.target.value)}
+                    required
+                    min="1900"
+                    max={new Date().getFullYear()}
+                    className="shadow-soft"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <Button 
+                  type="submit" 
+                  size="lg" 
+                  className="w-full bg-primary hover:bg-primary-light shadow-medium"
+                  disabled={!formData.name || !formData.industry || !formData.registrationNumber}
+                >
+                  <FileText className="h-5 w-5 mr-2" />
+                  Continue to Assessment
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Competitor Analysis */}
+        {formData.industry && (
+          <Card className="shadow-soft">
+            <CardContent className="pt-6">
+              <CompetitorDetails competitors={mockCompetitors} />
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
   );
 };
