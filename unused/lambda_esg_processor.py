@@ -179,7 +179,7 @@ class ESGProcessor:
             
         except Exception as e:
             logger.error(f"Error generating recommendations: {str(e)}")
-            return self._fallback_recommendations()
+            return self._fallback_recommendations(business_data, scores)
     
     def _find_grant_opportunities(self, business_data: Dict, scores: ESGScoring) -> List[GrantOpportunity]:
         """
@@ -343,8 +343,81 @@ class ESGProcessor:
             compliance_level="Good" if base_score > 70 else "Needs Improvement"
         )
     
-    def _fallback_recommendations(self) -> List[ESGRecommendation]:
-        """Provide fallback recommendations"""
+    def _fallback_recommendations(self, business_data: Dict = None, scores: ESGScoring = None) -> List[ESGRecommendation]:
+        """Generate fallback recommendations using LLM"""
+        try:
+            # Use LLM to generate contextual recommendations
+            context = f"""
+            Generate 4-5 diverse ESG improvement recommendations for Malaysian SMEs.
+            
+            Business Context: {business_data.get('industry', 'General') if business_data else 'General'} industry
+            Company Size: {business_data.get('size', 'SME') if business_data else 'SME'}
+            
+            Focus Areas (vary priorities and timeframes):
+            - Environmental: Energy efficiency, waste reduction, sustainable sourcing
+            - Social: Employee welfare, community engagement, workplace safety
+            - Governance: Transparency, ethics, stakeholder engagement
+            - Operational: Digital transformation, supply chain sustainability
+            
+            Return as JSON array with this exact format:
+            [{{
+                "id": "rec_001",
+                "type": "improvement",
+                "title": "Specific actionable title",
+                "description": "Detailed implementation description",
+                "priority": "high|medium|low",
+                "estimatedImpact": "Specific measurable outcomes with percentages/metrics",
+                "timeframe": "Realistic timeframe (e.g., 2-3 months, 6-12 months)",
+                "requiredActions": ["Action 1", "Action 2", "Action 3", "Action 4"],
+                "relatedCriteria": ["ESG Category 1", "ESG Category 2"],
+                "resources": [{{"title": "Resource name", "type": "document|website|tool", "description": "Brief description"}}]
+            }}]
+            
+            Ensure recommendations are practical for Malaysian SMEs with limited resources.
+            """
+            
+            response = bedrock_runtime.invoke_model(
+                modelId=self.model_id,
+                contentType="application/json",
+                accept="application/json",
+                body=json.dumps({
+                    "anthropic_version": "bedrock-2023-05-31",
+                    "max_tokens": 4000,
+                    "messages": [{
+                        "role": "user",
+                        "content": context
+                    }],
+                    "temperature": 0.7
+                })
+            )
+            
+            result = json.loads(response['body'].read())
+            recommendations_text = result['content'][0]['text']
+            
+            # Parse JSON from LLM response
+            recommendations_data = self._extract_json_from_text(recommendations_text)
+            
+            if recommendations_data:
+                recommendations = []
+                for i, rec in enumerate(recommendations_data[:5]):
+                    recommendations.append(ESGRecommendation(
+                        id=rec.get('id', f'rec_{i+1:03d}'),
+                        type=rec.get('type', 'improvement'),
+                        title=rec.get('title', 'ESG Improvement'),
+                        description=rec.get('description', 'Improve ESG practices'),
+                        priority=rec.get('priority', 'medium').lower(),
+                        estimatedImpact=rec.get('estimatedImpact', 'Positive impact on ESG performance'),
+                        timeframe=rec.get('timeframe', '3-6 months'),
+                        requiredActions=rec.get('requiredActions', ['Review current practices', 'Implement improvements']),
+                        relatedCriteria=rec.get('relatedCriteria', ['ESG Management']),
+                        resources=rec.get('resources', [])
+                    ))
+                return recommendations
+                
+        except Exception as e:
+            logger.error(f"Error generating LLM fallback recommendations: {str(e)}")
+        
+        # Ultimate fallback with static recommendations
         return [
             ESGRecommendation(
                 id="rec_001",
@@ -372,23 +445,36 @@ class ESGProcessor:
             ),
             ESGRecommendation(
                 id="rec_003",
-                type="improvement",
-                title="Develop ESG Governance Framework",
-                description="Establish formal ESG governance structure with clear responsibilities and reporting",
+                type="improvement", 
+                title="Establish Waste Reduction Program",
+                description="Implement comprehensive waste management and circular economy practices",
                 priority="medium",
-                estimatedImpact="Improved ESG performance tracking and 25% better compliance scores",
-                timeframe="4-8 months",
-                requiredActions=["Form ESG steering committee", "Define ESG policies and procedures", "Implement quarterly ESG reporting", "Establish stakeholder engagement process"],
-                relatedCriteria=["Corporate Governance", "ESG Management"],
-                resources=[{"title": "ESG Governance Best Practices", "type": "document", "description": "Guide to establishing ESG governance"}]
+                estimatedImpact="30-40% reduction in waste disposal costs and improved environmental compliance",
+                timeframe="4-6 months",
+                requiredActions=["Conduct waste audit", "Implement recycling programs", "Partner with waste management vendors", "Train employees on waste reduction"],
+                relatedCriteria=["Environmental Management", "Waste Management"],
+                resources=[{"title": "Malaysian Waste Management Guidelines", "type": "document", "description": "Government guidelines for SME waste management"}]
+            ),
+            ESGRecommendation(
+                id="rec_004",
+                type="improvement",
+                title="Develop Employee Engagement Initiative",
+                description="Create structured programs for employee wellness, development, and community involvement",
+                priority="medium",
+                estimatedImpact="25% improvement in employee retention and 15% increase in productivity",
+                timeframe="3-5 months",
+                requiredActions=["Launch employee wellness program", "Establish skills development pathways", "Create community volunteer opportunities", "Implement feedback systems"],
+                relatedCriteria=["Employee Welfare", "Community Engagement"],
+                resources=[{"title": "Employee Engagement Best Practices", "type": "guide", "description": "Comprehensive guide for SME employee programs"}]
             )
         ]
     
     def _fallback_analysis(self, business_data: Dict, responses: List[Dict]) -> Dict[str, Any]:
         """Provide fallback analysis when main processing fails"""
+        fallback_scores = self._fallback_scores(responses)
         return {
-            "scores": asdict(self._fallback_scores(responses)),
-            "recommendations": [asdict(rec) for rec in self._fallback_recommendations()],
+            "scores": asdict(fallback_scores),
+            "recommendations": [asdict(rec) for rec in self._fallback_recommendations(business_data, fallback_scores)],
             "opportunities": [],
             "analysis_timestamp": json.dumps({"timestamp": "2024-01-01T00:00:00Z"}),
             "compliance_gaps": ["Assessment processing encountered issues - manual review recommended"]
