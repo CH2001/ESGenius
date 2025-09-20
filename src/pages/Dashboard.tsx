@@ -194,71 +194,75 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </section>
         )}
 
-        {/* Framework Compliance Status */}
-        <section className="space-y-8">
-          <div className="text-center space-y-4">
-            <h2 className="text-3xl font-bold text-primary">
-              Framework Compliance Status
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Track your progress against official Malaysian sustainability frameworks
-            </p>
-          </div>
+        {/* Framework Compliance Status - only show when business profile exists */}
+        {business && (
+          <section className="space-y-8">
+            <div className="text-center space-y-4">
+              <h2 className="text-3xl font-bold text-primary">
+                Framework Compliance Status
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                Track your progress against official Malaysian sustainability frameworks
+              </p>
+            </div>
 
-          <div className="grid gap-6">
-            {mockFrameworkScores.map((framework, index) => (
-              <Card key={index} className="shadow-soft hover:shadow-medium transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-3">
-                        <Building2 className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-xl text-foreground">{framework.frameworkName}</CardTitle>
+            <div className="grid gap-6">
+              {mockFrameworkScores.map((framework, index) => (
+                <Card key={index} className="shadow-soft hover:shadow-medium transition-shadow">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center gap-3">
+                          <Building2 className="h-5 w-5 text-primary" />
+                          <CardTitle className="text-xl text-foreground">{framework.frameworkName}</CardTitle>
+                        </div>
+                        {framework.lastAssessed && (
+                          <p className="text-sm text-muted-foreground">
+                            Last assessed: {framework.lastAssessed.toLocaleDateString()}
+                          </p>
+                        )}
                       </div>
-                      {framework.lastAssessed && (
-                        <p className="text-sm text-muted-foreground">
-                          Last assessed: {framework.lastAssessed.toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                    <div className="text-right space-y-2">
-                      <div className="text-2xl font-bold text-primary">
-                        {framework.score.toFixed(1)}%
+                      <div className="text-right space-y-2">
+                        <div className="text-2xl font-bold text-primary">
+                          {framework.score.toFixed(1)}%
+                        </div>
+                        <Badge 
+                          variant={getComplianceLevelColor(framework.complianceLevel) as any}
+                          className="text-xs"
+                        >
+                          {getComplianceLevelLabel(framework.complianceLevel)}
+                        </Badge>
                       </div>
-                      <Badge 
-                        variant={getComplianceLevelColor(framework.complianceLevel) as any}
-                        className="text-xs"
-                      >
-                        {getComplianceLevelLabel(framework.complianceLevel)}
-                      </Badge>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <Progress 
-                      value={framework.score} 
-                      className="h-3"
-                    />
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>Needs Foundation (0-49)</span>
-                      <span>Progressing (50-74)</span>
-                      <span>Financing-Ready (75+)</span>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <Progress 
+                        value={framework.score} 
+                        className="h-3"
+                      />
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Needs Foundation (0-49)</span>
+                        <span>Progressing (50-74)</span>
+                        <span>Financing-Ready (75+)</span>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
 
-        {/* Opportunities Section */}
-        <section>
-          <OpportunitiesSection 
-            opportunities={mockOpportunities}
-            companyEligibilityScore={business ? 75 : 0}
-          />
-        </section>
+        {/* Opportunities Section - only show when business profile exists */}
+        {business && (
+          <section>
+            <OpportunitiesSection 
+              opportunities={mockOpportunities}
+              companyEligibilityScore={business ? 75 : 0}
+            />
+          </section>
+        )}
 
         {/* Getting Started */}
         <section className="space-y-8">
