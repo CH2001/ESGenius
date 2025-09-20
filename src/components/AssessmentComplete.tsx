@@ -42,11 +42,14 @@ export const AssessmentComplete: React.FC<AssessmentCompleteProps> = ({
   ];
 
   // Use Lambda response if available, otherwise calculate from form responses
-  const avgScore = lambdaResponse?.scoring?.overallScore || 
-    (responses.reduce((sum, r) => sum + r.score, 0) / responses.length);
+  const avgScore = (lambdaResponse?.scoring?.overallScore && typeof lambdaResponse.scoring.overallScore === 'number') 
+    ? lambdaResponse.scoring.overallScore 
+    : (responses.reduce((sum, r) => sum + r.score, 0) / responses.length);
 
   // Use Lambda opportunities if available, otherwise use mock data
-  const availableOpportunities = lambdaResponse?.opportunities || mockOpportunities;
+  const availableOpportunities = (lambdaResponse?.opportunities && Array.isArray(lambdaResponse.opportunities)) 
+    ? lambdaResponse.opportunities 
+    : mockOpportunities;
 
   return (
     <div className="min-h-screen bg-background py-8 px-6">

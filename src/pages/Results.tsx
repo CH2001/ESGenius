@@ -24,14 +24,18 @@ export const Results: React.FC<ResultsProps> = ({
 }) => {
   // Use Lambda response if available, otherwise calculate from form responses
   const calculateScores = () => {
-    if (lambdaResponse?.scoring) {
+    if (lambdaResponse?.scoring && 
+        typeof lambdaResponse.scoring.overallScore === 'number' &&
+        typeof lambdaResponse.scoring.environmentalScore === 'number' &&
+        typeof lambdaResponse.scoring.socialScore === 'number' &&
+        typeof lambdaResponse.scoring.governanceScore === 'number') {
       const { environmentalScore, socialScore, governanceScore, overallScore } = lambdaResponse.scoring;
       const categoryScores = [
-        { category: 'Environmental', score: environmentalScore, weight: 0.4 },
-        { category: 'Social', score: socialScore, weight: 0.35 },
-        { category: 'Governance', score: governanceScore, weight: 0.25 }
+        { category: 'Environmental', score: environmentalScore || 0, weight: 0.4 },
+        { category: 'Social', score: socialScore || 0, weight: 0.35 },
+        { category: 'Governance', score: governanceScore || 0, weight: 0.25 }
       ];
-      return { overallScore, categoryScores };
+      return { overallScore: overallScore || 0, categoryScores };
     }
 
     // Fallback to mock calculation
@@ -54,20 +58,22 @@ export const Results: React.FC<ResultsProps> = ({
 
   // Generate recommendations from Lambda or use mock data
   const generateRecommendations = (): ESGRecommendation[] => {
-    if (lambdaResponse?.scoring?.recommendations) {
-      // Convert Lambda recommendations to our format
-      return lambdaResponse.scoring.recommendations.map((rec: string, index: number) => ({
-        id: `lambda-rec-${index}`,
-        type: 'improvement',
-        title: rec,
-        description: rec,
-        priority: 'medium',
-        estimatedImpact: 'AI-generated recommendation',
-        timeframe: '3-6 months',
-        requiredActions: [],
-        relatedCriteria: [],
-        resources: []
-      }));
+    if (lambdaResponse?.scoring?.recommendations && Array.isArray(lambdaResponse.scoring.recommendations)) {
+      // Convert Lambda recommendations to our format with proper null checking
+      return lambdaResponse.scoring.recommendations
+        .filter((rec: any) => rec && typeof rec === 'string')
+        .map((rec: string, index: number) => ({
+          id: `lambda-rec-${index}`,
+          type: 'improvement' as const,
+          title: rec,
+          description: rec,
+          priority: 'medium' as const,
+          estimatedImpact: 'AI-generated recommendation',
+          timeframe: '3-6 months',
+          requiredActions: [],
+          relatedCriteria: [],
+          resources: []
+        }));
     }
 
     // Fallback to original mock generation logic

@@ -90,7 +90,7 @@ export const ESGRecommendations: React.FC<ESGRecommendationsProps> = ({
                       className="flex items-center gap-1"
                     >
                       {getPriorityIcon(rec.priority)}
-                      {rec.priority.charAt(0).toUpperCase() + rec.priority.slice(1)} Priority
+                      {rec?.priority ? rec.priority.charAt(0).toUpperCase() + rec.priority.slice(1) : 'Medium'} Priority
                     </Badge>
                     <Badge variant="outline" className="text-xs">
                       {rec.timeframe}

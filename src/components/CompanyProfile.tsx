@@ -47,7 +47,7 @@ export const CompanyProfile: React.FC<CompanyProfileProps> = ({
         <div className="flex items-start gap-4">
           <Avatar className="h-16 w-16">
             <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
-              {business.name.substring(0, 2).toUpperCase()}
+              {business?.name ? business.name.substring(0, 2).toUpperCase() : 'CO'}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 space-y-2">
@@ -83,7 +83,7 @@ export const CompanyProfile: React.FC<CompanyProfileProps> = ({
               <Users className="h-4 w-4 text-primary" />
               <span className="font-medium">Size:</span>
               <Badge variant="outline" className="text-xs">
-                {business.size.charAt(0).toUpperCase() + business.size.slice(1)} Enterprise
+                {business?.size ? business.size.charAt(0).toUpperCase() + business.size.slice(1) : 'Unknown'} Enterprise
               </Badge>
             </div>
             <div className="flex items-center gap-2 text-sm">

@@ -79,7 +79,7 @@ export const OpportunitiesSection: React.FC<OpportunitiesSectionProps> = ({
                         variant={getTypeColor(opportunity.type) as any}
                         className="text-xs"
                       >
-                        {opportunity.type.replace('-', ' ').toUpperCase()}
+                        {opportunity?.type ? opportunity.type.replace('-', ' ').toUpperCase() : 'OPPORTUNITY'}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">{opportunity.description}</p>
@@ -91,7 +91,7 @@ export const OpportunitiesSection: React.FC<OpportunitiesSectionProps> = ({
                     variant={getPriorityColor(opportunity.priority) as any}
                     className="text-xs"
                   >
-                    {opportunity.priority.toUpperCase()} PRIORITY
+                    {opportunity?.priority ? opportunity.priority.toUpperCase() : 'MEDIUM'} PRIORITY
                   </Badge>
                   <div className="text-sm font-bold text-primary">{opportunity.potentialValue}</div>
                 </div>
