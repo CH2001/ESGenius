@@ -1,4 +1,4 @@
-// Mock ESG Frameworks for Malaysian Compliance
+// Mock ESG Frameworks for Malaysian Compliance with Structured Fields
 
 import { ESGFramework, GrantOpportunity } from '@/types/esg';
 
@@ -14,40 +14,148 @@ export const mockESGFrameworks: ESGFramework[] = [
         weight: 0.4,
         criteria: [
           {
-            id: 'energy-efficiency',
-            title: 'Energy Efficiency & Carbon Management',
-            description: 'Monitor and reduce energy consumption and carbon emissions',
-            weight: 0.3,
-            benchmark: 'Reduce energy intensity by 15% annually',
-            requiredDocuments: ['Energy audit report', 'Carbon footprint calculation'],
-            scoringGuideline: 'Score based on reduction percentage and documentation quality'
+            id: 'energy-management',
+            title: 'Energy Management',
+            description: 'Monitor and manage energy consumption and renewable usage',
+            weight: 0.33,
+            benchmark: 'Track energy consumption and implement efficiency measures',
+            fields: [
+              {
+                id: 'monthly-electricity-spend',
+                label: 'Monthly Electricity Spend',
+                type: 'number',
+                required: true,
+                unit: 'RM',
+                placeholder: 'Enter monthly electricity cost'
+              },
+              {
+                id: 'electricity-kwh',
+                label: 'Monthly Electricity Consumption (if tracked)',
+                type: 'number',
+                required: false,
+                unit: 'kWh',
+                placeholder: 'Enter kWh consumption'
+              },
+              {
+                id: 'sub-metering',
+                label: 'Presence of Sub-metering',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'renewable-usage-type',
+                label: 'Renewable Energy Usage',
+                type: 'select',
+                required: true,
+                options: ['None', 'Solar', 'Wind', 'Hybrid', 'Other']
+              },
+              {
+                id: 'renewable-percentage',
+                label: 'Renewable Energy Percentage',
+                type: 'number',
+                required: false,
+                unit: '%',
+                placeholder: 'Enter percentage if applicable'
+              },
+              {
+                id: 'energy-efficiency-measures',
+                label: 'Energy Efficiency Measures Implemented',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'efficiency-details',
+                label: 'Efficiency Measures Details',
+                type: 'textarea',
+                required: false,
+                placeholder: 'Describe energy efficiency measures if any'
+              }
+            ],
+            scoringGuideline: 'Score based on energy tracking completeness, renewable usage, and efficiency measures'
           },
           {
             id: 'waste-management',
-            title: 'Waste Management & Circular Economy',
-            description: 'Implement sustainable waste reduction and recycling practices',
-            weight: 0.25,
-            benchmark: 'Achieve 70% waste diversion from landfill',
-            requiredDocuments: ['Waste management plan', 'Recycling records'],
-            scoringGuideline: 'Score based on waste reduction percentage and circular practices'
+            title: 'Waste Management',
+            description: 'Track and manage different types of waste and recycling practices',
+            weight: 0.33,
+            benchmark: 'Implement comprehensive waste tracking and recycling practices',
+            fields: [
+              {
+                id: 'waste-types',
+                label: 'Types of Waste Generated',
+                type: 'select',
+                required: true,
+                options: ['General only', 'General + Recyclable', 'General + Hazardous', 'General + E-waste', 'All types']
+              },
+              {
+                id: 'monthly-waste-volume',
+                label: 'Estimated Monthly Waste Volume',
+                type: 'number',
+                required: true,
+                unit: 'kg',
+                placeholder: 'Enter estimated volume'
+              },
+              {
+                id: 'waste-handlers',
+                label: 'Waste Handlers',
+                type: 'select',
+                required: true,
+                options: ['Municipal only', 'Licensed only', 'Both municipal and licensed']
+              },
+              {
+                id: 'recycling-practices',
+                label: 'Active Recycling Practices',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'recycling-details',
+                label: 'Recycling Details',
+                type: 'textarea',
+                required: false,
+                placeholder: 'Describe recycling practices if any'
+              }
+            ],
+            scoringGuideline: 'Score based on waste type diversity tracking, proper handling, and recycling implementation'
           },
           {
-            id: 'water-conservation',
-            title: 'Water Conservation',
-            description: 'Efficient water usage and conservation measures',
-            weight: 0.2,
-            benchmark: 'Reduce water consumption by 10% annually',
-            requiredDocuments: ['Water usage reports', 'Conservation initiatives'],
-            scoringGuideline: 'Score based on water efficiency improvements'
-          },
-          {
-            id: 'biodiversity',
-            title: 'Biodiversity & Environmental Protection',
-            description: 'Protect local ecosystems and biodiversity',
-            weight: 0.25,
-            benchmark: 'Zero negative impact on local biodiversity',
-            requiredDocuments: ['Environmental impact assessment', 'Conservation activities'],
-            scoringGuideline: 'Score based on environmental protection measures'
+            id: 'water-management',
+            title: 'Water Management',
+            description: 'Monitor water consumption and implement conservation measures',
+            weight: 0.34,
+            benchmark: 'Track water usage and implement conservation measures',
+            fields: [
+              {
+                id: 'monthly-water-bill',
+                label: 'Monthly Water Bill',
+                type: 'number',
+                required: true,
+                unit: 'RM',
+                placeholder: 'Enter monthly water cost'
+              },
+              {
+                id: 'water-consumption-m3',
+                label: 'Monthly Water Consumption (if tracked)',
+                type: 'number',
+                required: false,
+                unit: 'm³',
+                placeholder: 'Enter cubic meters'
+              },
+              {
+                id: 'conservation-measures',
+                label: 'Water Conservation Measures Implemented',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'conservation-details',
+                label: 'Conservation Measures Details',
+                type: 'textarea',
+                required: false,
+                placeholder: 'Describe water conservation measures if any'
+              }
+            ],
+            scoringGuideline: 'Score based on water consumption tracking and conservation initiative implementation'
           }
         ]
       },
@@ -57,31 +165,94 @@ export const mockESGFrameworks: ESGFramework[] = [
         weight: 0.35,
         criteria: [
           {
-            id: 'labor-practices',
-            title: 'Fair Labor Practices & Worker Rights',
-            description: 'Ensure fair wages, safe working conditions, and worker rights',
-            weight: 0.4,
-            benchmark: 'Comply with Malaysian Employment Act and ILO standards',
-            requiredDocuments: ['Employment contracts', 'Safety training records', 'Grievance procedures'],
-            scoringGuideline: 'Score based on compliance with labor standards'
+            id: 'labor-welfare',
+            title: 'Labor & Welfare',
+            description: 'Ensure compliance with labor standards and employee welfare',
+            weight: 0.5,
+            benchmark: 'Comply with minimum wage and provide proper employee benefits',
+            fields: [
+              {
+                id: 'minimum-wage-compliance',
+                label: 'Minimum Wage Compliance',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'lowest-wage',
+                label: 'Lowest Wage Paid',
+                type: 'number',
+                required: true,
+                unit: 'RM',
+                placeholder: 'Enter lowest wage'
+              },
+              {
+                id: 'overtime-tracking',
+                label: 'Overtime Tracking and Pay',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'statutory-contributions',
+                label: 'EPF/SOCSO/EIS Contributions',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'safety-training-frequency',
+                label: 'Safety Training Frequency',
+                type: 'select',
+                required: true,
+                options: ['None', 'Annually', 'Bi-annually', 'Quarterly', 'Monthly']
+              },
+              {
+                id: 'incidents-12months',
+                label: 'Number of Incidents in Last 12 Months',
+                type: 'number',
+                required: true,
+                unit: 'incidents',
+                placeholder: 'Enter number of incidents'
+              }
+            ],
+            scoringGuideline: 'Score based on wage compliance, benefits provision, and safety record'
           },
           {
-            id: 'diversity-inclusion',
-            title: 'Diversity & Inclusion',
-            description: 'Promote workplace diversity and inclusive practices',
-            weight: 0.25,
-            benchmark: '30% women in leadership, inclusive hiring practices',
-            requiredDocuments: ['Diversity policy', 'Hiring statistics', 'Training records'],
-            scoringGuideline: 'Score based on diversity metrics and inclusion initiatives'
-          },
-          {
-            id: 'community-engagement',
-            title: 'Community Development & Engagement',
-            description: 'Support local community development and engagement',
-            weight: 0.35,
-            benchmark: 'Annual community investment of 1% of revenue',
-            requiredDocuments: ['Community programs list', 'Investment records', 'Impact assessments'],
-            scoringGuideline: 'Score based on community investment and engagement quality'
+            id: 'social-inclusion',
+            title: 'Social Inclusion',
+            description: 'Promote diversity and non-discrimination in the workplace',
+            weight: 0.5,
+            benchmark: 'Maintain gender balance and implement non-discrimination policies',
+            fields: [
+              {
+                id: 'gender-ratio-male',
+                label: 'Male Employees (%)',
+                type: 'number',
+                required: true,
+                unit: '%',
+                placeholder: 'Enter male percentage'
+              },
+              {
+                id: 'gender-ratio-female',
+                label: 'Female Employees (%)',
+                type: 'number',
+                required: true,
+                unit: '%',
+                placeholder: 'Enter female percentage'
+              },
+              {
+                id: 'non-discrimination-policy',
+                label: 'Non-discrimination Policy in Place',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'inclusion-details',
+                label: 'Inclusion Initiatives Details',
+                type: 'textarea',
+                required: false,
+                placeholder: 'Describe any diversity and inclusion initiatives'
+              }
+            ],
+            scoringGuideline: 'Score based on gender balance and formal non-discrimination policy implementation'
           }
         ]
       },
@@ -91,31 +262,45 @@ export const mockESGFrameworks: ESGFramework[] = [
         weight: 0.25,
         criteria: [
           {
-            id: 'business-ethics',
-            title: 'Business Ethics & Anti-Corruption',
-            description: 'Maintain high ethical standards and anti-corruption measures',
-            weight: 0.4,
-            benchmark: 'Zero tolerance corruption policy with training program',
-            requiredDocuments: ['Ethics policy', 'Anti-corruption training', 'Whistleblower procedures'],
-            scoringGuideline: 'Score based on policy comprehensiveness and implementation'
-          },
-          {
-            id: 'transparency',
-            title: 'Transparency & Disclosure',
-            description: 'Provide transparent reporting and stakeholder communication',
-            weight: 0.3,
-            benchmark: 'Annual sustainability report with third-party verification',
-            requiredDocuments: ['Annual reports', 'Sustainability disclosures', 'Verification certificates'],
-            scoringGuideline: 'Score based on reporting quality and transparency'
-          },
-          {
-            id: 'risk-management',
-            title: 'Risk Management & Compliance',
-            description: 'Implement comprehensive risk management systems',
-            weight: 0.3,
-            benchmark: 'Documented risk management framework with regular reviews',
-            requiredDocuments: ['Risk register', 'Compliance procedures', 'Internal audit reports'],
-            scoringGuideline: 'Score based on risk management maturity and compliance record'
+            id: 'governance-framework',
+            title: 'Governance Framework',
+            description: 'Implement proper governance structures and policies',
+            weight: 1.0,
+            benchmark: 'Establish comprehensive governance framework with proper policies',
+            fields: [
+              {
+                id: 'code-of-ethics',
+                label: 'Code of Ethics in Place',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'anti-corruption-policy',
+                label: 'Anti-corruption Policy in Place',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'supplier-esg-policy',
+                label: 'Supplier ESG Policy in Place',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'esg-committee-owner',
+                label: 'ESG Committee/Owner Designated',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'governance-details',
+                label: 'Governance Implementation Details',
+                type: 'textarea',
+                required: false,
+                placeholder: 'Describe governance structures and implementation status'
+              }
+            ],
+            scoringGuideline: 'Score based on presence and implementation of key governance policies and structures'
           }
         ]
       }
@@ -137,7 +322,22 @@ export const mockESGFrameworks: ESGFramework[] = [
             description: 'Ensure ESG compliance throughout supply chain',
             weight: 0.5,
             benchmark: '80% of suppliers meet ESG criteria',
-            requiredDocuments: ['Supplier ESG assessments', 'Supply chain mapping'],
+            fields: [
+              {
+                id: 'supplier-assessment',
+                label: 'Supplier ESG Assessment Conducted',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'supplier-compliance-rate',
+                label: 'Supplier ESG Compliance Rate',
+                type: 'number',
+                required: false,
+                unit: '%',
+                placeholder: 'Enter percentage of compliant suppliers'
+              }
+            ],
             scoringGuideline: 'Score based on supplier ESG compliance percentage'
           },
           {
@@ -146,7 +346,22 @@ export const mockESGFrameworks: ESGFramework[] = [
             description: 'Adopt sustainable technologies and innovation practices',
             weight: 0.5,
             benchmark: '5% of revenue invested in sustainable innovation',
-            requiredDocuments: ['R&D investments', 'Innovation projects', 'Technology assessments'],
+            fields: [
+              {
+                id: 'innovation-investment',
+                label: 'Annual Innovation Investment',
+                type: 'number',
+                required: true,
+                unit: 'RM',
+                placeholder: 'Enter annual investment amount'
+              },
+              {
+                id: 'sustainability-focus',
+                label: 'Innovation Has Sustainability Focus',
+                type: 'boolean',
+                required: true
+              }
+            ],
             scoringGuideline: 'Score based on innovation investment and sustainability focus'
           }
         ]

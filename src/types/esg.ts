@@ -26,13 +26,23 @@ export interface ESGCategory {
   criteria: ESGCriterion[];
 }
 
+export interface ESGField {
+  id: string;
+  label: string;
+  type: 'text' | 'number' | 'boolean' | 'select' | 'textarea';
+  required: boolean;
+  options?: string[]; // For select type
+  unit?: string; // For number type (e.g., 'RM', 'kWh', '%')
+  placeholder?: string;
+}
+
 export interface ESGCriterion {
   id: string;
   title: string;
   description: string;
   weight: number;
   benchmark: string;
-  requiredDocuments: string[];
+  fields: ESGField[]; // Structured fields instead of free text
   scoringGuideline: string;
 }
 
@@ -50,7 +60,7 @@ export interface ESGAssessment {
 export interface ESGResponse {
   criterionId: string;
   score: number;
-  evidence: string;
+  fieldResponses: { [fieldId: string]: string | number | boolean }; // Structured responses
   documents: string[];
   notes: string;
 }

@@ -5,8 +5,11 @@ import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { FileText, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
-import { ESGFramework, ESGResponse } from '@/types/esg';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
+import { ESGFramework, ESGResponse, ESGField } from '@/types/esg';
 import { useToast } from '@/hooks/use-toast';
 
 interface ESGAssessmentFormProps {
@@ -24,6 +27,8 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [currentCriterionIndex, setCurrentCriterionIndex] = useState(0);
   const [responses, setResponses] = useState<ESGResponse[]>([]);
+  const [fieldResponses, setFieldResponses] = useState<{ [fieldId: string]: string | number | boolean }>({});
+  const [notes, setNotes] = useState('');
 
   const currentCategory = framework.categories[currentCategoryIndex];
   const currentCriterion = currentCategory.criteria[currentCriterionIndex];
@@ -31,14 +36,23 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
   const completedCriteria = responses.length;
   const progress = (completedCriteria / totalCriteria) * 100;
 
-  const handleResponseSubmit = (evidence: string, notes: string) => {
-    // AI-generated compliance score based on evidence (mock implementation)
-    const aiGeneratedScore = Math.floor(Math.random() * 40) + 60; // 60-100% range for demo
+  // Reset form fields when changing categories or criteria
+  useEffect(() => {
+    setFieldResponses({});
+    setNotes('');
+  }, [currentCategoryIndex, currentCriterionIndex]);
+
+  const handleResponseSubmit = (fieldResponses: { [fieldId: string]: string | number | boolean }, notes: string) => {
+    // AI-generated compliance score based on field responses (mock implementation)
+    const completionRate = Object.keys(fieldResponses).length / currentCriterion.fields.filter(f => f.required).length;
+    const baseScore = completionRate * 80; // Base score from completion
+    const bonusScore = Math.floor(Math.random() * 20); // Random bonus for demo
+    const aiGeneratedScore = Math.min(100, baseScore + bonusScore);
     
     const response: ESGResponse = {
       criterionId: currentCriterion.id,
       score: aiGeneratedScore,
-      evidence,
+      fieldResponses,
       documents: [], // In real implementation, handle file uploads
       notes
     };
@@ -61,14 +75,97 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
     }
   };
 
-  const [evidence, setEvidence] = useState('');
-  const [notes, setNotes] = useState('');
+  const handleFieldChange = (fieldId: string, value: string | number | boolean) => {
+    setFieldResponses(prev => ({
+      ...prev,
+      [fieldId]: value
+    }));
+  };
 
-  // Reset form fields when changing categories or criteria
-  useEffect(() => {
-    setEvidence('');
-    setNotes('');
-  }, [currentCategoryIndex, currentCriterionIndex]);
+  const renderField = (field: ESGField) => {
+    const value = fieldResponses[field.id] || '';
+
+    switch (field.type) {
+      case 'text':
+        return (
+          <Input
+            id={field.id}
+            placeholder={field.placeholder}
+            value={value as string}
+            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+            className="w-full"
+          />
+        );
+      
+      case 'number':
+        return (
+          <div className="flex items-center gap-2">
+            <Input
+              id={field.id}
+              type="number"
+              placeholder={field.placeholder}
+              value={value as number || ''}
+              onChange={(e) => handleFieldChange(field.id, parseFloat(e.target.value) || 0)}
+              className="flex-1"
+            />
+            {field.unit && <span className="text-sm text-muted-foreground">{field.unit}</span>}
+          </div>
+        );
+      
+      case 'boolean':
+        return (
+          <div className="flex items-center space-x-2">
+            <Switch
+              id={field.id}
+              checked={value as boolean}
+              onCheckedChange={(checked) => handleFieldChange(field.id, checked)}
+            />
+            <Label htmlFor={field.id} className="text-sm">
+              {value ? 'Yes' : 'No'}
+            </Label>
+          </div>
+        );
+      
+      case 'select':
+        return (
+          <Select value={value as string} onValueChange={(val) => handleFieldChange(field.id, val)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select an option" />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      
+      case 'textarea':
+        return (
+          <Textarea
+            id={field.id}
+            placeholder={field.placeholder}
+            value={value as string}
+            onChange={(e) => handleFieldChange(field.id, e.target.value)}
+            className="min-h-20"
+          />
+        );
+      
+      default:
+        return null;
+    }
+  };
+
+  const isFormValid = () => {
+    const requiredFields = currentCriterion.fields.filter(field => field.required);
+    return requiredFields.every(field => {
+      const value = fieldResponses[field.id];
+      if (field.type === 'boolean') return value !== undefined;
+      return value !== undefined && value !== '' && value !== null;
+    });
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -86,7 +183,7 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
             </div>
             <Progress value={progress} className="h-2 bg-muted" />
             <div className="text-center">
-              <div className="text-lg font-semibold text-primary mb-1">
+              <div className="text-lg font-semibold text-primary mb-1 bg-primary/10 rounded-lg px-4 py-2">
                 Category: {currentCategory.name}
               </div>
               <div className="text-sm text-muted-foreground">
@@ -110,55 +207,36 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
         <CardContent className="space-y-6">
           {/* Benchmark Information */}
           <div className="bg-muted/50 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <FileText className="h-5 w-5 text-primary mt-0.5" />
-              <div>
-                <h4 className="font-medium text-foreground mb-1">Benchmark Standard</h4>
-                <p className="text-sm text-muted-foreground">{currentCriterion.benchmark}</p>
+            <div>
+              <h4 className="font-medium text-foreground mb-1">Benchmark Standard</h4>
+              <p className="text-sm text-muted-foreground">{currentCriterion.benchmark}</p>
+            </div>
+          </div>
+
+          {/* Assessment Fields */}
+          <div className="space-y-6">
+            {currentCriterion.fields.map((field) => (
+              <div key={field.id} className="space-y-2">
+                <Label htmlFor={field.id} className="text-sm font-medium">
+                  {field.label} {field.required && <span className="text-red-500">*</span>}
+                </Label>
+                {renderField(field)}
               </div>
-            </div>
+            ))}
           </div>
 
-          {/* Required Documents */}
+          {/* Notes Input */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Required Documentation</Label>
-            <div className="flex flex-wrap gap-2">
-              {currentCriterion.requiredDocuments.map((doc, index) => (
-                <Badge key={index} variant="secondary" className="text-xs">
-                  {doc}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          {/* Evidence Input */}
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="evidence" className="text-sm font-medium">
-                Evidence & Implementation Details
-              </Label>
-              <Textarea
-                id="evidence"
-                placeholder="Describe your current implementation, policies, or practices related to this criterion..."
-                value={evidence}
-                onChange={(e) => setEvidence(e.target.value)}
-                className="min-h-24"
-              />
-            </div>
-
-            {/* Notes Input */}
-            <div className="space-y-2">
-              <Label htmlFor="notes" className="text-sm font-medium">
-                Additional Notes (Optional)
-              </Label>
-              <Textarea
-                id="notes"
-                placeholder="Any additional context, challenges, or planned improvements..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="min-h-16"
-              />
-            </div>
+            <Label htmlFor="notes" className="text-sm font-medium">
+              Additional Notes (Optional)
+            </Label>
+            <Textarea
+              id="notes"
+              placeholder="Any additional context, challenges, or planned improvements..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="min-h-16"
+            />
           </div>
 
           {/* Action Buttons */}
@@ -172,8 +250,8 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
               Back
             </Button>
             <Button
-              onClick={() => handleResponseSubmit(evidence, notes)}
-              disabled={!evidence.trim()}
+              onClick={() => handleResponseSubmit(fieldResponses, notes)}
+              disabled={!isFormValid()}
               className="bg-primary hover:bg-primary-light"
             >
               {completedCriteria === totalCriteria - 1 ? (
