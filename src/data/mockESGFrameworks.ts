@@ -45,7 +45,7 @@ export const mockESGFrameworks: ESGFramework[] = [
               {
                 id: 'renewable-usage-type',
                 label: 'Renewable Energy Usage',
-                type: 'select',
+                type: 'multiselect',
                 required: true,
                 options: ['None', 'Solar', 'Wind', 'Hybrid', 'Other']
               },
@@ -206,11 +206,11 @@ export const mockESGFrameworks: ESGFramework[] = [
               },
               {
                 id: 'incidents-12months',
-                label: 'Number of Incidents in Last 12 Months',
+                label: 'Number of Workplace Safety Incidents in Last 12 Months',
                 type: 'number',
                 required: true,
                 unit: 'incidents',
-                placeholder: 'Enter number of incidents'
+                placeholder: 'Enter total workplace accidents, injuries, near-misses'
               }
             ],
             scoringGuideline: 'Score based on wage compliance, benefits provision, and safety record'

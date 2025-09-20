@@ -29,7 +29,7 @@ export interface ESGCategory {
 export interface ESGField {
   id: string;
   label: string;
-  type: 'text' | 'number' | 'boolean' | 'select' | 'textarea';
+  type: 'text' | 'number' | 'boolean' | 'select' | 'multiselect' | 'textarea';
   required: boolean;
   options?: string[]; // For select type
   unit?: string; // For number type (e.g., 'RM', 'kWh', '%')

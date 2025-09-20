@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 import { ESGFramework, ESGResponse, ESGField, Business } from '@/types/esg';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { lambdaService } from '@/services/lambdaService';
 
@@ -88,10 +89,13 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
 
         toast({
           title: "Assessment Completed Successfully!",
-          description: "Your ESG assessment has been analyzed and results are ready.",
+          description: "Redirecting to home page...",
         });
 
-        onComplete(updatedResponses, lambdaResponse);
+        // Navigate back to home page after successful submission
+        setTimeout(() => {
+          onComplete(updatedResponses, lambdaResponse);
+        }, 1500);
       } catch (error) {
         console.error('Lambda submission error:', error);
         toast({
@@ -171,6 +175,35 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
               ))}
             </SelectContent>
           </Select>
+        );
+      
+      case 'multiselect':
+        const selectedValues = (value as string || '').split(',').filter(v => v);
+        return (
+          <div className="space-y-2">
+            {field.options?.map((option) => (
+              <div key={option} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${field.id}-${option}`}
+                  checked={selectedValues.includes(option)}
+                  onCheckedChange={(checked) => {
+                    let newValues = [...selectedValues];
+                    if (checked) {
+                      if (!newValues.includes(option)) {
+                        newValues.push(option);
+                      }
+                    } else {
+                      newValues = newValues.filter(v => v !== option);
+                    }
+                    handleFieldChange(field.id, newValues.join(','));
+                  }}
+                />
+                <Label htmlFor={`${field.id}-${option}`} className="text-sm">
+                  {option}
+                </Label>
+              </div>
+            ))}
+          </div>
         );
       
       case 'textarea':

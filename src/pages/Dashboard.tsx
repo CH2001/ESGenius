@@ -21,7 +21,7 @@ import { ESGeniusLogo } from '@/components/ESGeniusLogo';
 import { CompanyProfile } from '@/components/CompanyProfile';
 import { OpportunitiesSection } from '@/components/OpportunitiesSection';
 import { ProfilePane } from '@/components/ProfilePane';
-import { AWSConfiguration } from '@/components/AWSConfiguration';
+import { Settings } from '@/components/Settings';
 import { Business } from '@/types/esg';
 import { FrameworkScore, OpportunityRecommendation } from '@/types/scoring';
 import { mockOpportunities, calculateComplianceLevel, getComplianceLevelColor, getComplianceLevelLabel } from '@/data/mockScoringData';
@@ -102,8 +102,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
     <div className="min-h-screen bg-background">
       {/* Header with Logo */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <ESGeniusLogo size="lg" />
+          <Settings />
         </div>
       </header>
 
@@ -302,11 +303,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </div>
             </CardContent>
           </Card>
-        </section>
-
-        {/* AWS Configuration Section */}
-        <section>
-          <AWSConfiguration />
         </section>
       </div>
     </div>

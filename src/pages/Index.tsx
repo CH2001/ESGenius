@@ -24,7 +24,7 @@ const Index = () => {
     setAssessmentResults(data.responses);
     setLambdaResponse(data.lambdaResponse);
     setHasCompletedAssessment(true);
-    setCurrentPage('complete');
+    setCurrentPage('dashboard'); // Navigate back to dashboard after completion
   };
 
   const handleBackToDashboard = () => {
