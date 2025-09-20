@@ -238,14 +238,6 @@ export const BusinessRegistrationForm: React.FC<BusinessRegistrationFormProps> =
           </CardContent>
         </Card>
 
-        {/* Competitor Analysis */}
-        {formData.industry && (
-          <Card className="shadow-soft">
-            <CardContent className="pt-6">
-              <CompetitorDetails competitors={mockCompetitors} />
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );

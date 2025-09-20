@@ -39,7 +39,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ onComplete, onBack }) =>
                 Step 1 of 2: Register your business to begin the assessment
               </p>
             </div>
-            <BusinessRegistrationForm onComplete={handleBusinessSubmit} />
+            <BusinessRegistrationForm onComplete={handleBusinessSubmit} onBack={onBack} />
           </div>
         ) : (
           <div className="space-y-6">

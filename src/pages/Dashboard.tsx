@@ -20,6 +20,7 @@ import {
 import { ESGeniusLogo } from '@/components/ESGeniusLogo';
 import { CompanyProfile } from '@/components/CompanyProfile';
 import { OpportunitiesSection } from '@/components/OpportunitiesSection';
+import { ProfilePane } from '@/components/ProfilePane';
 import { Business } from '@/types/esg';
 import { FrameworkScore, OpportunityRecommendation } from '@/types/scoring';
 import { mockOpportunities, calculateComplianceLevel, getComplianceLevelColor, getComplianceLevelLabel } from '@/data/mockScoringData';
@@ -150,6 +151,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
             />
           </section>
         )}
+
+        {/* Profile Pane - Assessment History */}
+        <section>
+          <div className="text-center space-y-4 mb-8">
+            <h2 className="text-3xl font-bold text-primary">Your ESG Journey</h2>
+            <p className="text-lg text-muted-foreground">Track your progress and assessment history</p>
+          </div>
+          <ProfilePane 
+            business={business}
+            hasCompletedAssessment={hasCompletedAssessment}
+            onViewResults={onViewResults}
+          />
+        </section>
 
         {/* Details about the application */}
         <section className="space-y-8">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -8,6 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { FileText, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import { ESGFramework, ESGResponse } from '@/types/esg';
+import { useToast } from '@/hooks/use-toast';
 
 interface ESGAssessmentFormProps {
   framework: ESGFramework;
@@ -20,6 +21,7 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
   onComplete,
   onBack
 }) => {
+  const { toast } = useToast();
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [currentCriterionIndex, setCurrentCriterionIndex] = useState(0);
   const [responses, setResponses] = useState<ESGResponse[]>([]);
@@ -49,6 +51,10 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
       setCurrentCriterionIndex(0);
     } else {
       // Assessment complete
+      toast({
+        title: "Assessment Completed Successfully!",
+        description: "Your ESG assessment has been submitted and is being processed.",
+      });
       onComplete([...responses, response]);
     }
   };
@@ -56,6 +62,13 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
   const [currentScore, setCurrentScore] = useState([50]);
   const [evidence, setEvidence] = useState('');
   const [notes, setNotes] = useState('');
+
+  // Reset form fields when changing categories
+  useEffect(() => {
+    setCurrentScore([50]);
+    setEvidence('');
+    setNotes('');
+  }, [currentCategoryIndex]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -72,8 +85,13 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
               </Badge>
             </div>
             <Progress value={progress} className="h-2" />
-            <div className="text-sm text-muted-foreground text-center">
-              Category: {currentCategory.name} • Criterion {currentCriterionIndex + 1} of {currentCategory.criteria.length}
+            <div className="text-center">
+              <div className="text-lg font-semibold text-primary mb-1">
+                Category: {currentCategory.name}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Criterion {currentCriterionIndex + 1} of {currentCategory.criteria.length}
+              </div>
             </div>
           </div>
         </CardContent>

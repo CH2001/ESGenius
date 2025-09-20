@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dashboard } from './Dashboard';
 import { Assessment } from './Assessment';
+import { AssessmentComplete } from '@/components/AssessmentComplete';
 import { Results } from './Results';
 import { Business, ESGResponse } from '@/types/esg';
 
 const Index = () => {
   const navigate = useNavigate();
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'assessment' | 'results'>('dashboard');
+  const [currentPage, setCurrentPage] = useState<'dashboard' | 'assessment' | 'complete' | 'results'>('dashboard');
   const [business, setBusiness] = useState<Business | null>(null);
   const [assessmentResults, setAssessmentResults] = useState<ESGResponse[]>([]);
   const [hasCompletedAssessment, setHasCompletedAssessment] = useState(false);
@@ -20,7 +21,7 @@ const Index = () => {
     setBusiness(businessData);
     setAssessmentResults(responses);
     setHasCompletedAssessment(true);
-    setCurrentPage('results');
+    setCurrentPage('complete');
   };
 
   const handleBackToDashboard = () => {
@@ -31,6 +32,10 @@ const Index = () => {
     if (hasCompletedAssessment) {
       setCurrentPage('results');
     }
+  };
+
+  const handleViewResultsFromComplete = () => {
+    setCurrentPage('results');
   };
 
   const handleRetakeAssessment = () => {
@@ -45,6 +50,15 @@ const Index = () => {
           onBack={handleBackToDashboard}
         />
       );
+    case 'complete':
+      return business && assessmentResults.length > 0 ? (
+        <AssessmentComplete
+          business={business}
+          responses={assessmentResults}
+          onViewResults={handleViewResultsFromComplete}
+          onBackToDashboard={handleBackToDashboard}
+        />
+      ) : null;
     case 'results':
       return business && assessmentResults.length > 0 ? (
         <Results
