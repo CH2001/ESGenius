@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { FileText, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import { ESGFramework, ESGResponse } from '@/types/esg';
@@ -32,10 +31,13 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
   const completedCriteria = responses.length;
   const progress = (completedCriteria / totalCriteria) * 100;
 
-  const handleResponseSubmit = (score: number, evidence: string, notes: string) => {
+  const handleResponseSubmit = (evidence: string, notes: string) => {
+    // AI-generated compliance score based on evidence (mock implementation)
+    const aiGeneratedScore = Math.floor(Math.random() * 40) + 60; // 60-100% range for demo
+    
     const response: ESGResponse = {
       criterionId: currentCriterion.id,
-      score,
+      score: aiGeneratedScore,
       evidence,
       documents: [], // In real implementation, handle file uploads
       notes
@@ -59,16 +61,14 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
     }
   };
 
-  const [currentScore, setCurrentScore] = useState([50]);
   const [evidence, setEvidence] = useState('');
   const [notes, setNotes] = useState('');
 
-  // Reset form fields when changing categories
+  // Reset form fields when changing categories or criteria
   useEffect(() => {
-    setCurrentScore([50]);
     setEvidence('');
     setNotes('');
-  }, [currentCategoryIndex]);
+  }, [currentCategoryIndex, currentCriterionIndex]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -84,7 +84,7 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
                 {completedCriteria} / {totalCriteria} completed
               </Badge>
             </div>
-            <Progress value={progress} className="h-2" />
+            <Progress value={progress} className="h-2 bg-muted" />
             <div className="text-center">
               <div className="text-lg font-semibold text-primary mb-1">
                 Category: {currentCategory.name}
@@ -131,28 +131,8 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
             </div>
           </div>
 
-          {/* Score Input */}
+          {/* Evidence Input */}
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">
-                Compliance Score: {currentScore[0]}%
-              </Label>
-              <Slider
-                value={currentScore}
-                onValueChange={setCurrentScore}
-                max={100}
-                min={0}
-                step={5}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Not Compliant (0%)</span>
-                <span>Partially Compliant (50%)</span>
-                <span>Fully Compliant (100%)</span>
-              </div>
-            </div>
-
-            {/* Evidence Input */}
             <div className="space-y-2">
               <Label htmlFor="evidence" className="text-sm font-medium">
                 Evidence & Implementation Details
@@ -192,7 +172,7 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
               Back
             </Button>
             <Button
-              onClick={() => handleResponseSubmit(currentScore[0], evidence, notes)}
+              onClick={() => handleResponseSubmit(evidence, notes)}
               disabled={!evidence.trim()}
               className="bg-primary hover:bg-primary-light"
             >
