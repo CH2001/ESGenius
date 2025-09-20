@@ -5,7 +5,7 @@ import { Business, ESGResponse } from '@/types/esg';
 import { mockESGFrameworks } from '@/data/mockESGFrameworks';
 
 interface AssessmentProps {
-  onComplete: (business: Business, responses: ESGResponse[]) => void;
+  onComplete: (data: { business: Business; responses: ESGResponse[]; lambdaResponse?: any }) => void;
   onBack: () => void;
 }
 
@@ -18,9 +18,9 @@ export const Assessment: React.FC<AssessmentProps> = ({ onComplete, onBack }) =>
     setStep('esg');
   };
 
-  const handleESGComplete = (responses: ESGResponse[]) => {
+  const handleESGComplete = (responses: ESGResponse[], lambdaResponse?: any) => {
     if (business) {
-      onComplete(business, responses);
+      onComplete({ business, responses, lambdaResponse });
     }
   };
 
@@ -57,6 +57,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ onComplete, onBack }) =>
             </div>
             <ESGAssessmentForm
               framework={mockESGFrameworks[0]} // Using NSRF framework
+              business={business!}
               onComplete={handleESGComplete}
               onBack={handleBackToBusiness}
             />

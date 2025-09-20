@@ -10,6 +10,7 @@ import { Download, Share2, RefreshCw, ArrowLeft } from 'lucide-react';
 interface ResultsProps {
   business: Business;
   responses: ESGResponse[];
+  lambdaResponse?: any;
   onBack: () => void;
   onRetakeAssessment: () => void;
 }
@@ -17,11 +18,23 @@ interface ResultsProps {
 export const Results: React.FC<ResultsProps> = ({ 
   business, 
   responses, 
+  lambdaResponse,
   onBack, 
   onRetakeAssessment 
 }) => {
-  // Calculate mock scores based on responses
+  // Use Lambda response if available, otherwise calculate from form responses
   const calculateScores = () => {
+    if (lambdaResponse?.scoring) {
+      const { environmentalScore, socialScore, governanceScore, overallScore } = lambdaResponse.scoring;
+      const categoryScores = [
+        { category: 'Environmental', score: environmentalScore, weight: 0.4 },
+        { category: 'Social', score: socialScore, weight: 0.35 },
+        { category: 'Governance', score: governanceScore, weight: 0.25 }
+      ];
+      return { overallScore, categoryScores };
+    }
+
+    // Fallback to mock calculation
     const environmentalScore = responses.slice(0, 4).reduce((sum, r) => sum + r.score, 0) / 4;
     const socialScore = responses.slice(4, 7).reduce((sum, r) => sum + r.score, 0) / 3;
     const governanceScore = responses.slice(7, 10).reduce((sum, r) => sum + r.score, 0) / 3;
@@ -39,8 +52,25 @@ export const Results: React.FC<ResultsProps> = ({
 
   const { overallScore, categoryScores } = calculateScores();
 
-  // Generate mock recommendations based on scores
+  // Generate recommendations from Lambda or use mock data
   const generateRecommendations = (): ESGRecommendation[] => {
+    if (lambdaResponse?.scoring?.recommendations) {
+      // Convert Lambda recommendations to our format
+      return lambdaResponse.scoring.recommendations.map((rec: string, index: number) => ({
+        id: `lambda-rec-${index}`,
+        type: 'improvement',
+        title: rec,
+        description: rec,
+        priority: 'medium',
+        estimatedImpact: 'AI-generated recommendation',
+        timeframe: '3-6 months',
+        requiredActions: [],
+        relatedCriteria: [],
+        resources: []
+      }));
+    }
+
+    // Fallback to original mock generation logic
     const recommendations: ESGRecommendation[] = [];
     
     // Environmental recommendations
@@ -204,15 +234,19 @@ export const Results: React.FC<ResultsProps> = ({
           </CardContent>
         </Card>
 
-        {/* AWS Integration Note */}
+        {/* AWS Integration Status */}
         <Card className="shadow-soft border-primary/20">
           <CardContent className="p-6">
             <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold text-primary">Enhanced AI Analysis Available</h3>
+              <h3 className="text-lg font-semibold text-primary">
+                {lambdaResponse ? 'AI-Powered Analysis Active' : 'Enhanced AI Analysis Available'}
+              </h3>
               <p className="text-sm text-muted-foreground">
-                This assessment uses mock data. In production, our AWS-powered AI models would provide 
-                deeper analysis, personalized recommendations, and real-time market opportunity matching 
-                using advanced machine learning and Malaysian regulatory databases.
+                {lambdaResponse ? (
+                  `Analysis completed using AWS Lambda with ${lambdaResponse.confidence * 100}% confidence in ${lambdaResponse.processingTime}s`
+                ) : (
+                  'This assessment uses mock data. Configure AWS Lambda integration in the Dashboard to enable AI-powered analysis with personalized recommendations and real-time market opportunity matching.'
+                )}
               </p>
             </div>
           </CardContent>

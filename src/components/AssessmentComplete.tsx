@@ -11,6 +11,7 @@ import { mockOpportunities } from '@/data/mockScoringData';
 interface AssessmentCompleteProps {
   business: Business;
   responses: ESGResponse[];
+  lambdaResponse?: any;
   onViewResults: () => void;
   onBackToDashboard: () => void;
 }
@@ -18,6 +19,7 @@ interface AssessmentCompleteProps {
 export const AssessmentComplete: React.FC<AssessmentCompleteProps> = ({
   business,
   responses,
+  lambdaResponse,
   onViewResults,
   onBackToDashboard
 }) => {
@@ -39,7 +41,12 @@ export const AssessmentComplete: React.FC<AssessmentCompleteProps> = ({
     }
   ];
 
-  const avgScore = responses.reduce((sum, r) => sum + r.score, 0) / responses.length;
+  // Use Lambda response if available, otherwise calculate from form responses
+  const avgScore = lambdaResponse?.scoring?.overallScore || 
+    (responses.reduce((sum, r) => sum + r.score, 0) / responses.length);
+
+  // Use Lambda opportunities if available, otherwise use mock data
+  const availableOpportunities = lambdaResponse?.opportunities || mockOpportunities;
 
   return (
     <div className="min-h-screen bg-background py-8 px-6">
@@ -112,7 +119,7 @@ export const AssessmentComplete: React.FC<AssessmentCompleteProps> = ({
           </CardHeader>
           <CardContent>
             <OpportunitiesSection 
-              opportunities={mockOpportunities}
+              opportunities={availableOpportunities}
               companyEligibilityScore={avgScore}
             />
           </CardContent>

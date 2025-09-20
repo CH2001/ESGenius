@@ -13,13 +13,16 @@ const Index = () => {
   const [assessmentResults, setAssessmentResults] = useState<ESGResponse[]>([]);
   const [hasCompletedAssessment, setHasCompletedAssessment] = useState(false);
 
+  const [lambdaResponse, setLambdaResponse] = useState<any>(null);
+
   const handleStartAssessment = () => {
     setCurrentPage('assessment');
   };
 
-  const handleAssessmentComplete = (businessData: Business, responses: ESGResponse[]) => {
-    setBusiness(businessData);
-    setAssessmentResults(responses);
+  const handleAssessmentComplete = (data: { business: Business; responses: ESGResponse[]; lambdaResponse?: any }) => {
+    setBusiness(data.business);
+    setAssessmentResults(data.responses);
+    setLambdaResponse(data.lambdaResponse);
     setHasCompletedAssessment(true);
     setCurrentPage('complete');
   };
@@ -55,6 +58,7 @@ const Index = () => {
         <AssessmentComplete
           business={business}
           responses={assessmentResults}
+          lambdaResponse={lambdaResponse}
           onViewResults={handleViewResultsFromComplete}
           onBackToDashboard={handleBackToDashboard}
         />
@@ -64,6 +68,7 @@ const Index = () => {
         <Results
           business={business}
           responses={assessmentResults}
+          lambdaResponse={lambdaResponse}
           onBack={handleBackToDashboard}
           onRetakeAssessment={handleRetakeAssessment}
         />

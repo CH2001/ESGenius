@@ -8,18 +8,21 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
-import { ESGFramework, ESGResponse, ESGField } from '@/types/esg';
+import { CheckCircle, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
+import { ESGFramework, ESGResponse, ESGField, Business } from '@/types/esg';
 import { useToast } from '@/hooks/use-toast';
+import { lambdaService } from '@/services/lambdaService';
 
 interface ESGAssessmentFormProps {
   framework: ESGFramework;
-  onComplete: (responses: ESGResponse[]) => void;
+  business: Business;
+  onComplete: (responses: ESGResponse[], lambdaResponse?: any) => void;
   onBack?: () => void;
 }
 
 export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
   framework,
+  business,
   onComplete,
   onBack
 }) => {
@@ -29,6 +32,7 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
   const [responses, setResponses] = useState<ESGResponse[]>([]);
   const [fieldResponses, setFieldResponses] = useState<{ [fieldId: string]: string | number | boolean }>({});
   const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentCategory = framework.categories[currentCategoryIndex];
   const currentCriterion = currentCategory.criteria[currentCriterionIndex];
@@ -42,7 +46,7 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
     setNotes('');
   }, [currentCategoryIndex, currentCriterionIndex]);
 
-  const handleResponseSubmit = (fieldResponses: { [fieldId: string]: string | number | boolean }, notes: string) => {
+  const handleResponseSubmit = async (fieldResponses: { [fieldId: string]: string | number | boolean }, notes: string) => {
     // AI-generated compliance score based on field responses (mock implementation)
     const completionRate = Object.keys(fieldResponses).length / currentCriterion.fields.filter(f => f.required).length;
     const baseScore = completionRate * 80; // Base score from completion
@@ -57,7 +61,8 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
       notes
     };
 
-    setResponses(prev => [...prev, response]);
+    const updatedResponses = [...responses, response];
+    setResponses(updatedResponses);
 
     // Move to next criterion or category
     if (currentCriterionIndex < currentCategory.criteria.length - 1) {
@@ -66,12 +71,38 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
       setCurrentCategoryIndex(prev => prev + 1);
       setCurrentCriterionIndex(0);
     } else {
-      // Assessment complete
-      toast({
-        title: "Assessment Completed Successfully!",
-        description: "Your ESG assessment has been submitted and is being processed.",
-      });
-      onComplete([...responses, response]);
+      // Assessment complete - submit to AWS Lambda
+      setIsSubmitting(true);
+      
+      try {
+        toast({
+          title: "Processing Assessment",
+          description: "Sending data to AWS Lambda for AI analysis...",
+        });
+
+        const lambdaResponse = await lambdaService.submitESGAssessment({
+          business,
+          responses: updatedResponses,
+          framework: framework.name
+        });
+
+        toast({
+          title: "Assessment Completed Successfully!",
+          description: "Your ESG assessment has been analyzed and results are ready.",
+        });
+
+        onComplete(updatedResponses, lambdaResponse);
+      } catch (error) {
+        console.error('Lambda submission error:', error);
+        toast({
+          title: "Assessment Completed",
+          description: "Assessment saved locally. AWS Lambda integration needs configuration.",
+          variant: "destructive"
+        });
+        onComplete(updatedResponses);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -251,10 +282,15 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
             </Button>
             <Button
               onClick={() => handleResponseSubmit(fieldResponses, notes)}
-              disabled={!isFormValid()}
+              disabled={!isFormValid() || isSubmitting}
               className="bg-primary hover:bg-primary-light"
             >
-              {completedCriteria === totalCriteria - 1 ? (
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : completedCriteria === totalCriteria - 1 ? (
                 <>
                   Complete Assessment
                   <CheckCircle className="h-4 w-4 ml-2" />
