@@ -132,7 +132,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 size="lg" 
                 variant="outline"
                 onClick={onViewResults}
-                className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
               >
                 <BarChart3 className="h-5 w-5 mr-2" />
                 View Results

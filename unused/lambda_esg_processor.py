@@ -3,13 +3,19 @@ import boto3
 from typing import Dict, List, Any
 from dataclasses import dataclass, asdict
 import logging
+import os
 
 # Configure logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# Initialize AWS Bedrock client
-bedrock_runtime = boto3.client('bedrock-runtime')
+# Configuration constants for Lambda endpoint and AWS region
+# These can be overridden by environment variables if available
+LAMBDA_ENDPOINT_URL = os.getenv('LAMBDA_ENDPOINT_URL', 'https://your-lambda-endpoint.amazonaws.com')
+AWS_REGION = os.getenv('AWS_REGION', 'ap-southeast-1')
+
+# Initialize AWS Bedrock client with configurable region
+bedrock_runtime = boto3.client('bedrock-runtime', region_name=AWS_REGION)
 
 @dataclass
 class ESGScoring:
