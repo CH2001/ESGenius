@@ -167,30 +167,32 @@ export const Dashboard: React.FC<DashboardProps> = ({
           />
         </section>
 
-        {/* Details about the application */}
-        <section className="space-y-8">
-          <div className="text-center space-y-4">
-            <h2 className="text-3xl font-bold text-primary">
-              Why ESG Compliance Matters for Malaysian MSMEs
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              The Malaysian government's iESG Framework opens doors to a US$12 trillion global ESG market. 
-              Ensure your business is ready to capitalize on these opportunities.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {benefits.map((benefit, index) => (
-              <Card key={index} className="shadow-soft hover:shadow-medium transition-shadow text-center">
-                <CardContent className="pt-6 space-y-4">
-                  <div className="flex justify-center">{benefit.icon}</div>
-                  <h3 className="text-lg font-semibold text-foreground">{benefit.title}</h3>
-                  <p className="text-sm text-muted-foreground">{benefit.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
+        {/* Details about the application - only show when no assessment completed */}
+        {!hasCompletedAssessment && (
+          <section className="space-y-8">
+            <div className="text-center space-y-4">
+              <h2 className="text-3xl font-bold text-primary">
+                Why ESG Compliance Matters for Malaysian MSMEs
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+                The Malaysian government's iESG Framework opens doors to a US$12 trillion global ESG market. 
+                Ensure your business is ready to capitalize on these opportunities.
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {benefits.map((benefit, index) => (
+                <Card key={index} className="shadow-soft hover:shadow-medium transition-shadow text-center">
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="flex justify-center">{benefit.icon}</div>
+                    <h3 className="text-lg font-semibold text-foreground">{benefit.title}</h3>
+                    <p className="text-sm text-muted-foreground">{benefit.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Framework Compliance Status */}
         <section className="space-y-8">
