@@ -42,9 +42,27 @@ export const AssessmentComplete: React.FC<AssessmentCompleteProps> = ({
   ];
 
   // Use Lambda response if available, otherwise calculate from form responses
-  const avgScore = (lambdaResponse?.scoring?.overallScore && typeof lambdaResponse.scoring.overallScore === 'number') 
-    ? lambdaResponse.scoring.overallScore 
-    : (responses.reduce((sum, r) => sum + r.score, 0) / responses.length);
+  const avgScore = (() => {
+    if (lambdaResponse?.scoring?.overallScore && typeof lambdaResponse.scoring.overallScore === 'number') {
+      return lambdaResponse.scoring.overallScore;
+    }
+    
+    // Check for direct Lambda response format
+    if (lambdaResponse && (lambdaResponse.NSRF || lambdaResponse.iESG)) {
+      const nsrfScores = lambdaResponse.NSRF?.scores || {};
+      const iesgScores = lambdaResponse.iESG?.scores || {};
+      
+      const environmentalScore = nsrfScores.Environmental || 0;
+      const socialScore = nsrfScores.Social || 0;
+      const governanceScore = nsrfScores.Governance || 0;
+      const operationalScore = iesgScores['Operational Excellence'] || 0;
+      
+      return (environmentalScore + socialScore + governanceScore + operationalScore) / 4;
+    }
+    
+    // Fallback to form responses
+    return responses.reduce((sum, r) => sum + r.score, 0) / responses.length;
+  })();
 
   // Use Lambda opportunities if available, otherwise use mock data
   const availableOpportunities = (lambdaResponse?.opportunities && Array.isArray(lambdaResponse.opportunities)) 
@@ -84,17 +102,43 @@ export const AssessmentComplete: React.FC<AssessmentCompleteProps> = ({
             <CardTitle className="text-xl text-primary">Initial Score Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-3xl font-bold text-primary">{avgScore.toFixed(1)}%</div>
-                <p className="text-sm text-muted-foreground">Overall ESG Compliance</p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold text-primary">{avgScore.toFixed(1)}%</div>
+                  <p className="text-sm text-muted-foreground">Overall ESG Compliance</p>
+                </div>
+                <Badge 
+                  variant={avgScore >= 75 ? "default" : avgScore >= 50 ? "secondary" : "destructive"}
+                  className="text-sm px-3 py-1"
+                >
+                  {avgScore >= 75 ? "Financing-Ready" : avgScore >= 50 ? "Progressing" : "Needs Foundation"}
+                </Badge>
               </div>
-              <Badge 
-                variant={avgScore >= 75 ? "default" : avgScore >= 50 ? "secondary" : "destructive"}
-                className="text-sm px-3 py-1"
-              >
-                {avgScore >= 75 ? "Financing-Ready" : avgScore >= 50 ? "Progressing" : "Needs Foundation"}
-              </Badge>
+
+              {/* Lambda Framework Summary */}
+              {lambdaResponse && (lambdaResponse.NSRF || lambdaResponse.iESG) && (
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+                  {lambdaResponse.NSRF && (
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-primary">NSRF Analysis</div>
+                      <div className="text-sm text-muted-foreground">
+                        E: {lambdaResponse.NSRF.scores?.Environmental || 0} | 
+                        S: {lambdaResponse.NSRF.scores?.Social || 0} | 
+                        G: {lambdaResponse.NSRF.scores?.Governance || 0}
+                      </div>
+                    </div>
+                  )}
+                  {lambdaResponse.iESG && (
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-primary">iESG Analysis</div>
+                      <div className="text-sm text-muted-foreground">
+                        Operational: {lambdaResponse.iESG.scores?.['Operational Excellence'] || 0}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

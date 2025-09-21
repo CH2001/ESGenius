@@ -35,7 +35,34 @@ export const Results: React.FC<ResultsProps> = ({
         { category: 'Social', score: socialScore || 0, weight: 0.35 },
         { category: 'Governance', score: governanceScore || 0, weight: 0.25 }
       ];
-      return { overallScore: overallScore || 0, categoryScores };
+      return { overallScore: overallScore || 0, categoryScores, nsrfData: null, iesgData: null };
+    }
+
+    // Check for direct Lambda response format with NSRF and iESG
+    if (lambdaResponse && (lambdaResponse.NSRF || lambdaResponse.iESG)) {
+      const nsrfScores = lambdaResponse.NSRF?.scores || {};
+      const iesgScores = lambdaResponse.iESG?.scores || {};
+      
+      const environmentalScore = nsrfScores.Environmental || 0;
+      const socialScore = nsrfScores.Social || 0;
+      const governanceScore = nsrfScores.Governance || 0;
+      const operationalScore = iesgScores['Operational Excellence'] || 0;
+      
+      const categoryScores = [
+        { category: 'Environmental', score: environmentalScore, weight: 0.3 },
+        { category: 'Social', score: socialScore, weight: 0.3 },
+        { category: 'Governance', score: governanceScore, weight: 0.25 },
+        { category: 'Operational Excellence', score: operationalScore, weight: 0.15 }
+      ];
+      
+      const overallScore = (environmentalScore + socialScore + governanceScore + operationalScore) / 4;
+      
+      return { 
+        overallScore, 
+        categoryScores,
+        nsrfData: lambdaResponse.NSRF,
+        iesgData: lambdaResponse.iESG
+      };
     }
 
     // Fallback to mock calculation
@@ -54,7 +81,7 @@ export const Results: React.FC<ResultsProps> = ({
     return { overallScore, categoryScores };
   };
 
-  const { overallScore, categoryScores } = calculateScores();
+  const { overallScore, categoryScores, nsrfData, iesgData } = calculateScores();
 
   // Generate recommendations from Lambda or use mock data
   const generateRecommendations = (): ESGRecommendation[] => {
@@ -212,8 +239,89 @@ export const Results: React.FC<ResultsProps> = ({
         <ESGScoreDisplay
           overallScore={overallScore}
           categoryScores={categoryScores}
-          frameworkName="National Sustainability Reporting Framework (NSRF)"
+          frameworkName={nsrfData && iesgData ? "NSRF & iESG Combined Analysis" : "National Sustainability Reporting Framework (NSRF)"}
         />
+
+        {/* Lambda Framework Results */}
+        {(nsrfData || iesgData) && (
+          <div className="grid md:grid-cols-2 gap-6">
+            {nsrfData && (
+              <Card className="shadow-soft">
+                <CardHeader>
+                  <CardTitle className="text-xl text-primary">NSRF Framework Results</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground">Scores:</h4>
+                    {Object.entries(nsrfData.scores).map(([key, value]) => (
+                      <div key={key} className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">{key}</span>
+                         <span className="font-medium text-primary">{Number(value)}/100</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground">Justifications:</h4>
+                    {Object.entries(nsrfData.justifications || {}).map(([key, value]) => (
+                      <div key={key} className="text-sm">
+                        <span className="font-medium text-foreground">{key}:</span>
+                        <span className="text-muted-foreground ml-2">{String(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {nsrfData.recommendations && (
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-foreground">AI Recommendations:</h4>
+                      <div className="text-sm text-muted-foreground whitespace-pre-wrap max-h-64 overflow-y-auto p-3 bg-muted/50 rounded-lg">
+                        {nsrfData.recommendations}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {iesgData && (
+              <Card className="shadow-soft">
+                <CardHeader>
+                  <CardTitle className="text-xl text-primary">iESG Framework Results</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground">Scores:</h4>
+                    {Object.entries(iesgData.scores).map(([key, value]) => (
+                      <div key={key} className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">{key}</span>
+                        <span className="font-medium text-primary">{Number(value)}/100</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground">Justifications:</h4>
+                    {Object.entries(iesgData.justifications || {}).map(([key, value]) => (
+                      <div key={key} className="text-sm">
+                        <span className="font-medium text-foreground">{key}:</span>
+                        <span className="text-muted-foreground ml-2">{String(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {iesgData.recommendations && (
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-foreground">AI Recommendations:</h4>
+                      <div className="text-sm text-muted-foreground whitespace-pre-wrap max-h-64 overflow-y-auto p-3 bg-muted/50 rounded-lg">
+                        {iesgData.recommendations}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
 
         {/* Recommendations */}
         <ESGRecommendations
