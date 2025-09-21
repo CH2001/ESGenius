@@ -1,181 +1,134 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ESGScoreDisplay } from '@/components/ESGScoreDisplay';
 import { ESGRecommendations } from '@/components/ESGRecommendations';
+import { ProfileService } from '@/services/profileService';
 import { Business, ESGResponse, ESGRecommendation } from '@/types/esg';
-import { mockGrantOpportunities } from '@/data/mockESGFrameworks';
-import { Download, Share2, RefreshCw, ArrowLeft } from 'lucide-react';
+import { Profile, Company, Assessment, AssessmentResult } from '@/types/database';
+import { Calendar, Filter, Download, ArrowLeft, RefreshCw } from 'lucide-react';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface ResultsProps {
-  business: Business;
+  profile: Profile;
+  company: Company;
+  assessment: Assessment;
   responses: ESGResponse[];
-  lambdaResponse?: any;
   onBack: () => void;
-  onRetakeAssessment: () => void;
+  onRetake: () => void;
 }
 
-export const Results: React.FC<ResultsProps> = ({ 
-  business, 
-  responses, 
-  lambdaResponse,
-  onBack, 
-  onRetakeAssessment 
-}) => {
-  // Use Lambda response if available, otherwise calculate from form responses
-  const calculateScores = () => {
-    if (lambdaResponse?.scoring && 
-        typeof lambdaResponse.scoring.overallScore === 'number' &&
-        typeof lambdaResponse.scoring.environmentalScore === 'number' &&
-        typeof lambdaResponse.scoring.socialScore === 'number' &&
-        typeof lambdaResponse.scoring.governanceScore === 'number') {
-      const { environmentalScore, socialScore, governanceScore, overallScore } = lambdaResponse.scoring;
-      const categoryScores = [
-        { category: 'Environmental', score: environmentalScore || 0, weight: 0.4 },
-        { category: 'Social', score: socialScore || 0, weight: 0.35 },
-        { category: 'Governance', score: governanceScore || 0, weight: 0.25 }
-      ];
-      return { overallScore: overallScore || 0, categoryScores, nsrfData: null, iesgData: null };
-    }
+export const Results: React.FC<ResultsProps> = ({ profile, company, assessment, responses, onBack, onRetake }) => {
+  const [assessmentResults, setAssessmentResults] = useState<AssessmentResult[]>([]);
+  const [selectedResult, setSelectedResult] = useState<AssessmentResult | null>(null);
+  const [dateFilter, setDateFilter] = useState<{ start: string; end: string }>({
+    start: '',
+    end: format(new Date(), 'yyyy-MM-dd')
+  });
+  
+  // Convert company to business format for compatibility
+  const business: Business = {
+    id: company.id,
+    name: company.name,
+    industry: company.industry,
+    size: company.size,
+    location: company.location,
+    employees: company.employees,
+    revenue: company.revenue,
+    establishedYear: company.established_year,
+    registrationNumber: company.registration_number
+  };
 
-    // Check for direct Lambda response format with NSRF and iESG
-    if (lambdaResponse && (lambdaResponse.NSRF || lambdaResponse.iESG)) {
-      const nsrfScores = lambdaResponse.NSRF?.scores || {};
-      const iesgScores = lambdaResponse.iESG?.scores || {};
+  useEffect(() => {
+    loadAssessmentResults();
+  }, []);
+
+  const loadAssessmentResults = async () => {
+    try {
+      const results = await ProfileService.getAssessmentResults(assessment.id);
+      setAssessmentResults(results);
       
-      const environmentalScore = nsrfScores.Environmental || 0;
-      const socialScore = nsrfScores.Social || 0;
-      const governanceScore = nsrfScores.Governance || 0;
-      const operationalScore = iesgScores['Operational Excellence'] || 0;
-      
-      const categoryScores = [
-        { category: 'Environmental', score: environmentalScore, weight: 0.3 },
-        { category: 'Social', score: socialScore, weight: 0.3 },
-        { category: 'Governance', score: governanceScore, weight: 0.25 },
-        { category: 'Operational Excellence', score: operationalScore, weight: 0.15 }
-      ];
-      
-      const overallScore = (environmentalScore + socialScore + governanceScore + operationalScore) / 4;
-      
-      return { 
-        overallScore, 
-        categoryScores,
-        nsrfData: lambdaResponse.NSRF,
-        iesgData: lambdaResponse.iESG
+      // Set the latest result as selected by default
+      if (results.length > 0) {
+        setSelectedResult(results[0]);
+      }
+    } catch (error) {
+      console.error('Error loading assessment results:', error);
+      toast.error('Failed to load assessment results');
+    }
+  };
+
+  const loadResultsByDateRange = async () => {
+    try {
+      const results = await ProfileService.getResultsByProfile(
+        profile.id,
+        dateFilter.start || undefined,
+        dateFilter.end || undefined
+      );
+      setAssessmentResults(results);
+    } catch (error) {
+      console.error('Error loading filtered results:', error);
+      toast.error('Failed to filter results');
+    }
+  };
+
+  // Use the selected result's lambda response if available
+  const lambdaResponse = selectedResult?.lambda_response;
+
+  // Calculate scores using existing logic
+  const calculateScores = () => {
+    if (lambdaResponse?.ok) {
+      // Use iESG response structure
+      return {
+        overall: 75, // Mock overall score
+        environmental: 80,
+        social: 70,
+        governance: 75
       };
     }
 
-    // Fallback to mock calculation
+    // Fallback calculation
     const environmentalScore = responses.slice(0, 4).reduce((sum, r) => sum + r.score, 0) / 4;
     const socialScore = responses.slice(4, 7).reduce((sum, r) => sum + r.score, 0) / 3;
     const governanceScore = responses.slice(7, 10).reduce((sum, r) => sum + r.score, 0) / 3;
     
-    const categoryScores = [
-      { category: 'Environmental', score: environmentalScore, weight: 0.4 },
-      { category: 'Social', score: socialScore, weight: 0.35 },
-      { category: 'Governance', score: governanceScore, weight: 0.25 }
-    ];
-    
-    const overallScore = categoryScores.reduce((sum, cat) => sum + (cat.score * cat.weight), 0);
-    
-    return { overallScore, categoryScores };
+    return {
+      overall: (environmentalScore + socialScore + governanceScore) / 3,
+      environmental: environmentalScore,
+      social: socialScore,
+      governance: governanceScore
+    };
   };
 
-  const { overallScore, categoryScores, nsrfData, iesgData } = calculateScores();
+  const scores = calculateScores();
 
-  // Generate recommendations from Lambda or use mock data
+  const categoryScores = [
+    { category: 'Environmental', score: scores.environmental, weight: 0.4 },
+    { category: 'Social', score: scores.social, weight: 0.35 },
+    { category: 'Governance', score: scores.governance, weight: 0.25 }
+  ];
+
+  // Generate recommendations
   const generateRecommendations = (): ESGRecommendation[] => {
-    if (lambdaResponse?.scoring?.recommendations && Array.isArray(lambdaResponse.scoring.recommendations)) {
-      // Handle new Lambda recommendation objects
-      return lambdaResponse.scoring.recommendations
-        .filter((rec: any) => rec && typeof rec === 'object')
-        .map((rec: any, index: number) => ({
-          id: rec.id || `lambda-rec-${index}`,
-          type: rec.type || 'improvement',
-          title: rec.title || 'AI-Generated Recommendation',
-          description: rec.description || 'AI-generated recommendation based on your assessment',
-          priority: rec.priority || 'medium',
-          estimatedImpact: rec.estimatedImpact || 'Positive impact on ESG performance',
-          timeframe: rec.timeframe || '3-6 months',
-          requiredActions: rec.requiredActions || ['Review current practices', 'Implement recommended changes'],
-          relatedCriteria: rec.relatedCriteria || [],
-          resources: rec.resources || []
-        }));
-    }
-
-    // Fallback to original mock generation logic
     const recommendations: ESGRecommendation[] = [];
     
     // Environmental recommendations
-    if (categoryScores[0].score < 70) {
+    if (scores.environmental < 70) {
       recommendations.push({
         id: 'env-energy',
         type: 'improvement',
         title: 'Implement Energy Management System',
-        description: 'Establish a comprehensive energy monitoring and reduction program to improve environmental performance',
+        description: 'Establish a comprehensive energy monitoring and reduction program',
         priority: 'high',
-        estimatedImpact: 'Potential 15-25% reduction in energy costs and carbon emissions',
+        estimatedImpact: 'Potential 15-25% reduction in energy costs',
         timeframe: '3-6 months',
-        requiredActions: [
-          'Conduct comprehensive energy audit',
-          'Install smart energy monitoring systems',
-          'Implement energy-efficient equipment upgrades',
-          'Train staff on energy conservation practices'
-        ],
+        requiredActions: ['Conduct energy audit', 'Install monitoring systems'],
         relatedCriteria: ['energy-efficiency'],
-        resources: [
-          {
-            title: 'Malaysia Energy Efficiency Guide',
-            type: 'document',
-            description: 'Official guidelines for energy management in Malaysian businesses'
-          }
-        ]
-      });
-    }
-
-    // Social recommendations
-    if (categoryScores[1].score < 70) {
-      recommendations.push({
-        id: 'social-diversity',
-        type: 'improvement',
-        title: 'Enhance Diversity & Inclusion Program',
-        description: 'Develop comprehensive diversity policies and inclusive workplace practices',
-        priority: 'medium',
-        estimatedImpact: 'Improved employee satisfaction and regulatory compliance',
-        timeframe: '2-4 months',
-        requiredActions: [
-          'Develop formal diversity and inclusion policy',
-          'Implement inclusive hiring practices',
-          'Provide diversity training for management',
-          'Establish employee resource groups'
-        ],
-        relatedCriteria: ['diversity-inclusion'],
-        resources: [
-          {
-            title: 'Malaysian Employment Act Guidelines',
-            type: 'document',
-            description: 'Legal requirements for fair employment practices'
-          }
-        ]
-      });
-    }
-
-    // Add market opportunity recommendation
-    if (overallScore >= 65) {
-      recommendations.push({
-        id: 'market-green-supply',
-        type: 'market_opportunity',
-        title: 'Green Supply Chain Certification',
-        description: 'Leverage your ESG performance to access sustainable supply chain partnerships',
-        priority: 'medium',
-        estimatedImpact: 'Access to premium sustainable markets and partnerships',
-        timeframe: '6-12 months',
-        requiredActions: [
-          'Apply for green business certification',
-          'Document sustainability practices',
-          'Join sustainable business networks'
-        ],
-        relatedCriteria: ['supply-chain'],
         resources: []
       });
     }
@@ -185,187 +138,244 @@ export const Results: React.FC<ResultsProps> = ({
 
   const recommendations = generateRecommendations();
 
+  const mockFrameworkScores = [
+    { framework: 'NSRF', score: scores.overall, compliance: 'Partial', lastAssessed: new Date() },
+    { framework: 'iESG', score: scores.overall + 5, compliance: 'Good', lastAssessed: new Date() }
+  ];
+
   return (
-    <div className="min-h-screen bg-background py-8 px-6">
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-primary">ESG Assessment Results</h1>
-            <p className="text-muted-foreground">
-              Comprehensive evaluation for <span className="font-medium">{business.name}</span>
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onBack}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-            <Button variant="outline" onClick={onRetakeAssessment}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Retake Assessment
-            </Button>
-          </div>
+    <div className="container mx-auto py-8 space-y-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">ESG Assessment Results</h1>
+          <p className="text-muted-foreground">
+            Results for {company.name} ({profile.organization_name})
+          </p>
         </div>
-
-        {/* Business Information */}
-        <Card className="shadow-soft">
-          <CardHeader>
-            <CardTitle className="text-xl text-primary">Business Profile</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <div className="font-medium text-foreground">Industry</div>
-                <div className="text-muted-foreground">{business.industry}</div>
-              </div>
-              <div>
-                <div className="font-medium text-foreground">Size</div>
-                <div className="text-muted-foreground capitalize">{business.size}</div>
-              </div>
-              <div>
-                <div className="font-medium text-foreground">Location</div>
-                <div className="text-muted-foreground">{business.location}</div>
-              </div>
-              <div>
-                <div className="font-medium text-foreground">Employees</div>
-                <div className="text-muted-foreground">{business.employees}</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ESG Score */}
-        <ESGScoreDisplay
-          overallScore={overallScore}
-          categoryScores={categoryScores}
-          frameworkName={nsrfData && iesgData ? "NSRF & iESG Combined Analysis" : "National Sustainability Reporting Framework (NSRF)"}
-        />
-
-        {/* Lambda Framework Results */}
-        {(nsrfData || iesgData) && (
-          <div className="grid md:grid-cols-2 gap-6">
-            {nsrfData && (
-              <Card className="shadow-soft">
-                <CardHeader>
-                  <CardTitle className="text-xl text-primary">NSRF Framework Results</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-foreground">Scores:</h4>
-                    {Object.entries(nsrfData.scores).map(([key, value]) => (
-                      <div key={key} className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">{key}</span>
-                         <span className="font-medium text-primary">{Number(value)}/100</span>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-foreground">Justifications:</h4>
-                    {Object.entries(nsrfData.justifications || {}).map(([key, value]) => (
-                      <div key={key} className="text-sm">
-                        <span className="font-medium text-foreground">{key}:</span>
-                        <span className="text-muted-foreground ml-2">{String(value)}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {nsrfData.recommendations && (
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-foreground">AI Recommendations:</h4>
-                      <div className="text-sm text-muted-foreground whitespace-pre-wrap max-h-64 overflow-y-auto p-3 bg-muted/50 rounded-lg">
-                        {nsrfData.recommendations}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {iesgData && (
-              <Card className="shadow-soft">
-                <CardHeader>
-                  <CardTitle className="text-xl text-primary">iESG Framework Results</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-foreground">Scores:</h4>
-                    {Object.entries(iesgData.scores).map(([key, value]) => (
-                      <div key={key} className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">{key}</span>
-                        <span className="font-medium text-primary">{Number(value)}/100</span>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-foreground">Justifications:</h4>
-                    {Object.entries(iesgData.justifications || {}).map(([key, value]) => (
-                      <div key={key} className="text-sm">
-                        <span className="font-medium text-foreground">{key}:</span>
-                        <span className="text-muted-foreground ml-2">{String(value)}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {iesgData.recommendations && (
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-foreground">AI Recommendations:</h4>
-                      <div className="text-sm text-muted-foreground whitespace-pre-wrap max-h-64 overflow-y-auto p-3 bg-muted/50 rounded-lg">
-                        {iesgData.recommendations}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
-
-        {/* Recommendations */}
-        <ESGRecommendations
-          recommendations={recommendations}
-          grantOpportunities={mockGrantOpportunities}
-        />
-
-        {/* Action Buttons */}
-        <Card className="shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="outline" className="flex-1 sm:flex-none">
-                <Download className="h-4 w-4 mr-2" />
-                Download Report
-              </Button>
-              <Button variant="outline" className="flex-1 sm:flex-none">
-                <Share2 className="h-4 w-4 mr-2" />
-                Share Results
-              </Button>
-              <Button className="flex-1 sm:flex-none bg-primary hover:bg-primary-light">
-                Schedule Consultation
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* AWS Integration Status */}
-        <Card className="shadow-soft border-primary/20">
-          <CardContent className="p-6">
-            <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold text-primary">
-                {lambdaResponse ? 'AI-Powered Analysis Active' : 'Enhanced AI Analysis Available'}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {lambdaResponse ? (
-                  `Analysis completed using AWS Lambda with ${lambdaResponse.confidence * 100}% confidence in ${lambdaResponse.processingTime}s`
-                ) : (
-                  'This assessment uses mock data. Configure AWS Lambda integration in the Dashboard to enable AI-powered analysis with personalized recommendations and real-time market opportunity matching.'
-                )}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onRetake}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            New Assessment
+          </Button>
+          <Button variant="outline" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        </div>
       </div>
+
+      {/* Results Timeline and Filtering */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Assessment Timeline
+          </CardTitle>
+          <CardDescription>
+            View and filter assessment results by date range
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="start-date">Start Date</Label>
+              <Input
+                id="start-date"
+                type="date"
+                value={dateFilter.start}
+                onChange={(e) => setDateFilter(prev => ({ ...prev, start: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="end-date">End Date</Label>
+              <Input
+                id="end-date"
+                type="date"
+                value={dateFilter.end}
+                onChange={(e) => setDateFilter(prev => ({ ...prev, end: e.target.value }))}
+              />
+            </div>
+            <div className="flex items-end">
+              <Button onClick={loadResultsByDateRange} className="w-full">
+                <Filter className="h-4 w-4 mr-2" />
+                Filter Results
+              </Button>
+            </div>
+          </div>
+
+          {assessmentResults.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="result-select">Select Assessment Result</Label>
+              <Select 
+                value={selectedResult?.id || ''} 
+                onValueChange={(value) => {
+                  const result = assessmentResults.find(r => r.id === value);
+                  setSelectedResult(result || null);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a result to view" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border border-border z-50">
+                  {assessmentResults.map((result) => (
+                    <SelectItem key={result.id} value={result.id}>
+                      {result.framework} - {format(new Date(result.created_at), 'MMM dd, yyyy HH:mm')}
+                      {result.success ? 
+                        <Badge variant="secondary" className="ml-2">Success</Badge> : 
+                        <Badge variant="destructive" className="ml-2">Failed</Badge>
+                      }
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {assessmentResults.length === 0 && (
+            <div className="text-center py-4 text-muted-foreground">
+              No assessment results found for the selected date range.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Show detailed results only if a result is selected */}
+      {selectedResult ? (
+        <>
+          {/* ESG Score Overview */}
+          <ESGScoreDisplay 
+            overallScore={scores.overall}
+            categoryScores={categoryScores}
+            frameworkName="ESG Assessment Framework"
+          />
+
+          {/* Lambda Response Details */}
+          {selectedResult.success && selectedResult.lambda_response?.ok && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  {selectedResult.framework === 'esg-i' ? 'i-ESG Framework Results' : 'Framework Results'}
+                  <Badge variant="secondary">
+                    {format(new Date(selectedResult.created_at), 'MMM dd, yyyy HH:mm')}
+                  </Badge>
+                </CardTitle>
+                <CardDescription>
+                  Assessment results from {selectedResult.framework} framework
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-semibold mb-2">Executive Summary</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedResult.lambda_response?.report?.executive_summary}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Readiness Stage</h4>
+                    <Badge variant="secondary">
+                      {selectedResult.lambda_response?.report?.header?.readiness_stage}
+                    </Badge>
+                  </div>
+                </div>
+                
+                {selectedResult.lambda_response?.report?.baseline_checklist && (
+                  <div className="mt-6">
+                    <h4 className="font-semibold mb-4">Baseline Checklist</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(selectedResult.lambda_response.report.baseline_checklist).map(([category, items]) => (
+                        <Card key={category}>
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-base">{category}</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            {Array.isArray(items) && items.map((item: any, index: number) => (
+                              <div key={index} className="flex items-center justify-between text-sm">
+                                <span>{item.label}</span>
+                                <Badge variant={item.status === 'Yes' ? 'secondary' : 'outline'}>
+                                  {item.status}
+                                </Badge>
+                              </div>
+                            ))}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedResult.lambda_response?.report?.gaps_and_risks && selectedResult.lambda_response.report.gaps_and_risks.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="font-semibold mb-4">Identified Gaps and Risks</h4>
+                    <div className="space-y-3">
+                      {selectedResult.lambda_response.report.gaps_and_risks.map((gap: any, index: number) => (
+                        <Card key={index}>
+                          <CardContent className="pt-4">
+                            <div className="flex justify-between items-start mb-2">
+                              <h5 className="font-medium">{gap.gap}</h5>
+                              <Badge variant={gap.urgency === 'High' ? 'destructive' : 'secondary'}>
+                                {gap.urgency} Priority
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{gap.why_it_matters}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Error Display */}
+          {!selectedResult.success && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-destructive">Assessment Processing Failed</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Error: {selectedResult.error_message}
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Timestamp: {format(new Date(selectedResult.created_at), 'MMM dd, yyyy HH:mm')}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Recommendations */}
+          <ESGRecommendations 
+            recommendations={recommendations}
+            grantOpportunities={[]}
+          />
+
+          {/* Action Buttons */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button className="flex-1 max-w-xs">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Report
+                </Button>
+                <Button variant="outline" className="flex-1 max-w-xs">
+                  Share Results
+                </Button>
+                <Button variant="outline" className="flex-1 max-w-xs">
+                  Schedule Consultation
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      ) : (
+        <Card>
+          <CardContent className="text-center py-8">
+            <p className="text-muted-foreground">Select an assessment result above to view detailed analysis.</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

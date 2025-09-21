@@ -1,44 +1,36 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Dashboard } from './Dashboard';
-import { Assessment } from './Assessment';
+import { Dashboard } from '@/pages/Dashboard';
+import { AssessmentPage } from '@/pages/Assessment';
 import { AssessmentComplete } from '@/components/AssessmentComplete';
-import { Results } from './Results';
+import { Results } from '@/pages/Results';
 import { Business, ESGResponse } from '@/types/esg';
+import { Profile, Company, Assessment as DBAssessment } from '@/types/database';
 
-const Index = () => {
-  const navigate = useNavigate();
+export const Index = () => {
   const [currentPage, setCurrentPage] = useState<'dashboard' | 'assessment' | 'complete' | 'results'>('dashboard');
-  const [business, setBusiness] = useState<Business | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [company, setCompany] = useState<Company | null>(null);
+  const [assessment, setAssessment] = useState<DBAssessment | null>(null);
   const [assessmentResults, setAssessmentResults] = useState<ESGResponse[]>([]);
-  const [hasCompletedAssessment, setHasCompletedAssessment] = useState(false);
-
-  const [lambdaResponse, setLambdaResponse] = useState<any>(null);
 
   const handleStartAssessment = () => {
     setCurrentPage('assessment');
   };
 
-  const handleAssessmentComplete = (data: { business: Business; responses: ESGResponse[]; lambdaResponse?: any }) => {
-    setBusiness(data.business);
+  const handleAssessmentComplete = (data: { profile: Profile; company: Company; assessment: DBAssessment; responses: ESGResponse[] }) => {
+    setProfile(data.profile);
+    setCompany(data.company);
+    setAssessment(data.assessment);
     setAssessmentResults(data.responses);
-    setLambdaResponse(data.lambdaResponse);
-    setHasCompletedAssessment(true);
-    setCurrentPage('dashboard'); // Navigate back to dashboard after completion
+    setCurrentPage('complete');
+  };
+
+  const handleViewResults = () => {
+    setCurrentPage('results');
   };
 
   const handleBackToDashboard = () => {
     setCurrentPage('dashboard');
-  };
-
-  const handleViewResults = () => {
-    if (hasCompletedAssessment) {
-      setCurrentPage('results');
-    }
-  };
-
-  const handleViewResultsFromComplete = () => {
-    setCurrentPage('results');
   };
 
   const handleRetakeAssessment = () => {
@@ -46,42 +38,64 @@ const Index = () => {
   };
 
   switch (currentPage) {
+    case 'dashboard':
+      return (
+        <Dashboard 
+          onStartAssessment={handleStartAssessment}
+          onViewResults={handleViewResults}
+          business={company ? {
+            id: company.id,
+            name: company.name,
+            industry: company.industry,
+            size: company.size,
+            location: company.location,
+            employees: company.employees,
+            revenue: company.revenue,
+            establishedYear: company.established_year,
+            registrationNumber: company.registration_number
+          } : null}
+          hasCompletedAssessment={!!company}
+        />
+      );
     case 'assessment':
       return (
-        <Assessment 
+        <AssessmentPage 
           onComplete={handleAssessmentComplete}
           onBack={handleBackToDashboard}
         />
       );
     case 'complete':
-      return business && assessmentResults.length > 0 ? (
+      return profile && company && assessment ? (
         <AssessmentComplete
-          business={business}
+          business={{
+            id: company.id,
+            name: company.name,
+            industry: company.industry,
+            size: company.size,
+            location: company.location,
+            employees: company.employees,
+            revenue: company.revenue,
+            establishedYear: company.established_year,
+            registrationNumber: company.registration_number
+          }}
           responses={assessmentResults}
-          lambdaResponse={lambdaResponse}
-          onViewResults={handleViewResultsFromComplete}
+          onViewResults={handleViewResults}
           onBackToDashboard={handleBackToDashboard}
         />
       ) : null;
     case 'results':
-      return business && assessmentResults.length > 0 ? (
+      return profile && company && assessment ? (
         <Results
-          business={business}
+          profile={profile}
+          company={company}
+          assessment={assessment}
           responses={assessmentResults}
-          lambdaResponse={lambdaResponse}
           onBack={handleBackToDashboard}
-          onRetakeAssessment={handleRetakeAssessment}
+          onRetake={handleRetakeAssessment}
         />
       ) : null;
     default:
-      return (
-        <Dashboard
-          onStartAssessment={handleStartAssessment}
-          onViewResults={handleViewResults}
-          hasCompletedAssessment={hasCompletedAssessment}
-          business={business}
-        />
-      );
+      return null;
   }
 };
 

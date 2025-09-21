@@ -67,7 +67,10 @@ export class ProfileService {
     }
     
     console.log('Company created successfully:', data);
-    return data;
+    return data ? {
+      ...data,
+      size: data.size as 'micro' | 'small' | 'medium'
+    } as Company : null;
   }
 
   static async getCompaniesByProfile(profileId: string): Promise<Company[]> {
@@ -81,7 +84,10 @@ export class ProfileService {
       throw error;
     }
     
-    return (data || []) as Company[];
+    return (data || []).map(company => ({
+      ...company,
+      size: company.size as 'micro' | 'small' | 'medium'
+    })) as Company[];
   }
 
   static async updateCompany(id: string, updates: Partial<Company>): Promise<Company | null> {
@@ -99,7 +105,10 @@ export class ProfileService {
     }
     
     console.log('Company updated successfully:', data);
-    return data;
+    return data ? {
+      ...data,
+      size: data.size as 'micro' | 'small' | 'medium'
+    } as Company : null;
   }
 
   // Assessment operations
@@ -156,7 +165,10 @@ export class ProfileService {
       throw error;
     }
     
-    return (data || []) as Assessment[];
+    return (data || []).map(assessment => ({
+      ...assessment,
+      status: assessment.status as 'in_progress' | 'completed' | 'failed'
+    })) as Assessment[];
   }
 
   // Assessment results operations
