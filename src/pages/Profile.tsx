@@ -19,7 +19,7 @@ export const ProfilePage: React.FC = () => {
   const [editingCompany, setEditingCompany] = useState<string | null>(null);
   const [showNewProfile, setShowNewProfile] = useState(false);
   const [showNewCompany, setShowNewCompany] = useState<string | null>(null);
-  const [newProfile, setNewProfile] = useState<Partial<Profile>>({});
+  const [newProfile, setNewProfile] = useState<Partial<Profile & { established_year?: number; employees?: number }>>({});
   const [newCompany, setNewCompany] = useState<Partial<Company>>({});
 
   useEffect(() => {
@@ -52,8 +52,8 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handleCreateProfile = async () => {
-    if (!currentUser || !newProfile.organization_name) {
-      toast.error('Please fill in the organization name');
+    if (!currentUser || !newProfile.organization_name || !newProfile.industry || !newProfile.established_year || !newProfile.employees) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
@@ -157,60 +157,54 @@ export const ProfilePage: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="industry">Industry</Label>
+                <Label htmlFor="industry">Industry *</Label>
+                <Select value={newProfile.industry || ''} onValueChange={(value) => setNewProfile(prev => ({ ...prev, industry: value }))}>
+                  <SelectTrigger className="bg-background border border-border">
+                    <SelectValue placeholder="Select industry" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border border-border z-50">
+                    <SelectItem value="agriculture">Agriculture & Forestry</SelectItem>
+                    <SelectItem value="automotive">Automotive</SelectItem>
+                    <SelectItem value="banking">Banking & Financial Services</SelectItem>
+                    <SelectItem value="construction">Construction</SelectItem>
+                    <SelectItem value="education">Education</SelectItem>
+                    <SelectItem value="energy">Energy & Utilities</SelectItem>
+                    <SelectItem value="food-beverage">Food & Beverage</SelectItem>
+                    <SelectItem value="healthcare">Healthcare</SelectItem>
+                    <SelectItem value="hospitality">Hospitality & Tourism</SelectItem>
+                    <SelectItem value="manufacturing">Manufacturing</SelectItem>
+                    <SelectItem value="mining">Mining & Quarrying</SelectItem>
+                    <SelectItem value="retail">Retail & Wholesale</SelectItem>
+                    <SelectItem value="technology">Technology</SelectItem>
+                    <SelectItem value="telecommunications">Telecommunications</SelectItem>
+                    <SelectItem value="transportation">Transportation & Logistics</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="established-year">Year of Establishment *</Label>
                 <Input
-                  id="industry"
-                  value={newProfile.industry || ''}
-                  onChange={(e) => setNewProfile(prev => ({ ...prev, industry: e.target.value }))}
-                  placeholder="Enter industry"
+                  id="established-year"
+                  type="number"
+                  value={newProfile.established_year || ''}
+                  onChange={(e) => setNewProfile(prev => ({ ...prev, established_year: parseInt(e.target.value) || undefined }))}
+                  placeholder={new Date().getFullYear().toString()}
+                  min="1900"
+                  max={new Date().getFullYear()}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="website">Website</Label>
+                <Label htmlFor="employees">Number of Employees *</Label>
                 <Input
-                  id="website"
-                  value={newProfile.website || ''}
-                  onChange={(e) => setNewProfile(prev => ({ ...prev, website: e.target.value }))}
-                  placeholder="https://example.com"
+                  id="employees"
+                  type="number"
+                  value={newProfile.employees || ''}
+                  onChange={(e) => setNewProfile(prev => ({ ...prev, employees: parseInt(e.target.value) || undefined }))}
+                  placeholder="0"
+                  min="0"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="contact-email">Contact Email</Label>
-                <Input
-                  id="contact-email"
-                  type="email"
-                  value={newProfile.contact_email || ''}
-                  onChange={(e) => setNewProfile(prev => ({ ...prev, contact_email: e.target.value }))}
-                  placeholder="contact@example.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contact-phone">Contact Phone</Label>
-                <Input
-                  id="contact-phone"
-                  value={newProfile.contact_phone || ''}
-                  onChange={(e) => setNewProfile(prev => ({ ...prev, contact_phone: e.target.value }))}
-                  placeholder="+60 123456789"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={newProfile.description || ''}
-                onChange={(e) => setNewProfile(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Brief description of your organization"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
-              <Textarea
-                id="address"
-                value={newProfile.address || ''}
-                onChange={(e) => setNewProfile(prev => ({ ...prev, address: e.target.value }))}
-                placeholder="Organization address"
-              />
             </div>
             <div className="flex gap-2">
               <Button onClick={handleCreateProfile}>
