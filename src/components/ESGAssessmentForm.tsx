@@ -301,7 +301,7 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
               Back
             </Button>
             <div className="flex gap-3">
-              {completedCriteria < totalCriteria - 1 && (
+              {currentCriterionIndex < currentCategory.criteria.length - 1 && currentCategoryIndex < framework.categories.length - 1 && (
                 <Button
                   onClick={() => handleResponseSubmit(fieldResponses, notes)}
                   disabled={!isFormValid() || isSubmitting}
@@ -320,24 +320,45 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
                   )}
                 </Button>
               )}
-              <Button
-                onClick={() => handleResponseSubmit(fieldResponses, notes)}
-                disabled={!isFormValid() || isSubmitting}
-                variant={completedCriteria === totalCriteria - 1 ? "default" : "outline"}
-                className={completedCriteria === totalCriteria - 1 ? "bg-success hover:bg-success-light" : "border-success text-success hover:bg-success hover:text-white"}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    {completedCriteria === totalCriteria - 1 ? 'Complete Assessment' : 'Submit Response'}
-                    <CheckCircle className="h-4 w-4 ml-2" />
-                  </>
-                )}
-              </Button>
+              {!(currentCriterionIndex === currentCategory.criteria.length - 1 && currentCategoryIndex === framework.categories.length - 1) && (
+                <Button
+                  onClick={() => handleResponseSubmit(fieldResponses, notes)}
+                  disabled={!isFormValid() || isSubmitting}
+                  variant="outline"
+                  className="border-success text-success hover:bg-success hover:text-white"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      Submit Response
+                      <CheckCircle className="h-4 w-4 ml-2" />
+                    </>
+                  )}
+                </Button>
+              )}
+              {currentCriterionIndex === currentCategory.criteria.length - 1 && currentCategoryIndex === framework.categories.length - 1 && (
+                <Button
+                  onClick={() => handleResponseSubmit(fieldResponses, notes)}
+                  disabled={!isFormValid() || isSubmitting}
+                  className="bg-success hover:bg-success-light"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      Complete Assessment
+                      <CheckCircle className="h-4 w-4 ml-2" />
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>
