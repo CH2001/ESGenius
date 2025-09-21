@@ -24,7 +24,7 @@ class DemoAuthService {
 
   loginWithDemo() {
     this.currentUser = {
-      id: 'demo-user-001',
+      id: '550e8400-e29b-41d4-a716-446655440000', // Valid UUID format
       email: 'demo@esgenius.com',
       name: 'Demo User'
     };

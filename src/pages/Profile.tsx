@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { ProfileService } from '@/services/profileService';
 import { Profile, Company } from '@/types/database';
 import { demoAuth, DemoUser } from '@/services/demoAuthService';
-import { Plus, Building, Edit, Save, X } from 'lucide-react';
+import { Plus, Building, Edit, Save, X, ArrowLeft } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -128,9 +128,15 @@ export const ProfilePage: React.FC = () => {
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Profile Management</h1>
-          <p className="text-muted-foreground">Manage your organization profiles and companies</p>
+        <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={() => window.location.href = '/'}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Home
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Profile Management</h1>
+            <p className="text-muted-foreground">Manage your organization profiles and companies</p>
+          </div>
         </div>
         <Button onClick={() => setShowNewProfile(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
