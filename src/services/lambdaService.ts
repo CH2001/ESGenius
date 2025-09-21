@@ -108,6 +108,16 @@ class LambdaService {
       dataSize: JSON.stringify(data).length + ' bytes'
     });
 
+    console.log('📋 Survey Responses Being Submitted:', {
+      responses: data.responses.map(response => ({
+        criterionId: response.criterionId,
+        score: response.score,
+        fieldResponses: response.fieldResponses,
+        notes: response.notes,
+        documents: response.documents
+      }))
+    });
+
     try {
       const config = this.getConfig();
       console.log('✅ Lambda endpoint configured:', config.endpoint);
