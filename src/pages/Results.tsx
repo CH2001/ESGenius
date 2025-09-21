@@ -209,6 +209,137 @@ export const Results: React.FC<ResultsProps> = ({
           </CardContent>
         </Card>
 
+        {/* Framework Compliance Status */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Framework Compliance Status</CardTitle>
+            <CardDescription>Track your progress against official Malaysian sustainability frameworks</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6">
+              {/* NSRF Framework */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center gap-3">
+                      <Building2 className="h-5 w-5 text-primary" />
+                      <h4 className="text-lg font-semibold">National Sustainability Reporting Framework (NSRF)</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Last assessed: {new Date().toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="text-right space-y-2">
+                    {framework === 'NSRF Framework' ? (
+                      <>
+                        <div className="text-2xl font-bold text-primary">
+                          {overallScore.toFixed(1)}%
+                        </div>
+                        <Badge 
+                          variant={
+                            overallScore >= 75 ? 'default' : 
+                            overallScore >= 50 ? 'secondary' : 
+                            'outline'
+                          }
+                          className={
+                            overallScore >= 75 ? 'bg-green-500/10 text-green-700 border-green-200' :
+                            overallScore >= 50 ? 'bg-yellow-500/10 text-yellow-700 border-yellow-200' :
+                            'bg-red-500/10 text-red-700 border-red-200'
+                          }
+                        >
+                          {overallScore >= 75 ? 'Financing-Ready (75+)' : 
+                           overallScore >= 50 ? 'Progressing (50-74)' : 
+                           'Needs Foundation (0-49)'}
+                        </Badge>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-lg text-muted-foreground">
+                          Pending Review
+                        </div>
+                        <Badge variant="outline" className="bg-gray-500/10 text-gray-600 border-gray-200">
+                          Not Assessed
+                        </Badge>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <Progress 
+                    value={framework === 'NSRF Framework' ? overallScore : 0} 
+                    className={`h-3 ${framework !== 'NSRF Framework' ? 'opacity-50' : ''}`}
+                  />
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>Needs Foundation (0-49)</span>
+                    <span>Progressing (50-74)</span>
+                    <span>Financing-Ready (75+)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* i-ESG Framework */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center gap-3">
+                      <Building2 className="h-5 w-5 text-primary" />
+                      <h4 className="text-lg font-semibold">National Industry ESG (i-ESG) Framework</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Last assessed: {new Date().toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="text-right space-y-2">
+                    {framework === 'i-ESG (qualitative)' || framework === 'i-ESG Framework' ? (
+                      <>
+                        <div className="text-2xl font-bold text-primary">
+                          {overallScore.toFixed(1)}%
+                        </div>
+                        <Badge 
+                          variant={
+                            overallScore >= 75 ? 'default' : 
+                            overallScore >= 50 ? 'secondary' : 
+                            'outline'
+                          }
+                          className={
+                            overallScore >= 75 ? 'bg-green-500/10 text-green-700 border-green-200' :
+                            overallScore >= 50 ? 'bg-yellow-500/10 text-yellow-700 border-yellow-200' :
+                            'bg-red-500/10 text-red-700 border-red-200'
+                          }
+                        >
+                          {overallScore >= 75 ? 'Financing-Ready (75+)' : 
+                           overallScore >= 50 ? 'Progressing (50-74)' : 
+                           'Needs Foundation (0-49)'}
+                        </Badge>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-lg text-muted-foreground">
+                          Pending Review
+                        </div>
+                        <Badge variant="outline" className="bg-gray-500/10 text-gray-600 border-gray-200">
+                          Not Assessed
+                        </Badge>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <Progress 
+                    value={framework === 'i-ESG (qualitative)' || framework === 'i-ESG Framework' ? overallScore : 0} 
+                    className={`h-3 ${framework !== 'i-ESG (qualitative)' && framework !== 'i-ESG Framework' ? 'opacity-50' : ''}`}
+                  />
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>Needs Foundation (0-49)</span>
+                    <span>Progressing (50-74)</span>
+                    <span>Financing-Ready (75+)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Category Breakdown */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {categoryScores.map((category, index) => (
@@ -229,12 +360,12 @@ export const Results: React.FC<ResultsProps> = ({
           ))}
         </div>
 
-        {/* Framework Compliance Status */}
+        {/* Baseline Checklist - Detailed breakdown of checklist items */}
         {results?.baseline_checklist && (
           <Card>
             <CardHeader>
-              <CardTitle>Framework Compliance Status</CardTitle>
-              <CardDescription>Detailed checklist based on {framework} assessment</CardDescription>
+              <CardTitle>Detailed Compliance Checklist</CardTitle>
+              <CardDescription>Individual checklist items based on {framework} assessment</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">

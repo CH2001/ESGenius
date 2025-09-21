@@ -300,28 +300,45 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
-            <Button
-              onClick={() => handleResponseSubmit(fieldResponses, notes)}
-              disabled={!isFormValid() || isSubmitting}
-              className="bg-primary hover:bg-primary-light"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : completedCriteria === totalCriteria - 1 ? (
-                <>
-                  Complete Assessment
-                  <CheckCircle className="h-4 w-4 ml-2" />
-                </>
-              ) : (
-                <>
-                  Next Criterion
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </>
+            <div className="flex gap-3">
+              {completedCriteria < totalCriteria - 1 && (
+                <Button
+                  onClick={() => handleResponseSubmit(fieldResponses, notes)}
+                  disabled={!isFormValid() || isSubmitting}
+                  className="bg-primary hover:bg-primary-light"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      Next Criterion
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </>
+                  )}
+                </Button>
               )}
-            </Button>
+              <Button
+                onClick={() => handleResponseSubmit(fieldResponses, notes)}
+                disabled={!isFormValid() || isSubmitting}
+                variant={completedCriteria === totalCriteria - 1 ? "default" : "outline"}
+                className={completedCriteria === totalCriteria - 1 ? "bg-success hover:bg-success-light" : "border-success text-success hover:bg-success hover:text-white"}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    {completedCriteria === totalCriteria - 1 ? 'Complete Assessment' : 'Submit Response'}
+                    <CheckCircle className="h-4 w-4 ml-2" />
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
