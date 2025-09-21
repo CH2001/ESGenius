@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import { mockESGFrameworks } from '@/data/mockESGFrameworks';
 
 interface AssessmentPageProps {
-  onComplete: (data: { company: Company; assessment: Assessment; responses: ESGResponse[] }) => void;
+  onComplete: (data: { company: Company; assessment: Assessment; responses: ESGResponse[]; results?: any }) => void;
   onBack: () => void;
 }
 
@@ -127,33 +127,32 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
       console.log('Starting ESG completion with company:', selectedCompany);
       console.log('Selected frameworks:', selectedFrameworks);
       
-      // Verify Supabase auth before creating assessment
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('Current Supabase user:', user?.id);
-      
-      // Create assessment record
-      const assessment = await CompanyService.createAssessment({
+      // Create a mock assessment object for Lambda submission
+      const mockAssessment = {
+        id: `assessment-${Date.now()}`,
         company_id: selectedCompany.id,
         frameworks: selectedFrameworks,
         responses: responses,
-        status: 'in_progress'
+        status: 'completed' as const,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Submit directly to Lambda and get results
+      const lambdaResults = await NewLambdaService.submitESGAssessment(
+        selectedCompany,
+        mockAssessment,
+        responses,
+        selectedFrameworks
+      );
+
+      toast.success('Assessment completed successfully');
+      onComplete({
+        company: selectedCompany,
+        assessment: mockAssessment,
+        responses,
+        results: lambdaResults // Pass Lambda results for visualization
       });
-
-      if (assessment) {
-        await NewLambdaService.submitESGAssessment(
-          selectedCompany,
-          assessment,
-          responses,
-          selectedFrameworks
-        );
-
-        toast.success('Assessment completed successfully');
-        onComplete({
-          company: selectedCompany,
-          assessment,
-          responses
-        });
-      }
     } catch (error) {
       console.error('Error completing assessment:', error);
       toast.error('Failed to complete assessment: ' + (error as any)?.message);

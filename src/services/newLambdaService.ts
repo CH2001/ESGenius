@@ -9,7 +9,7 @@ export class NewLambdaService {
     assessment: Assessment,
     responses: ESGResponse[],
     frameworks: string[]
-  ): Promise<void> {
+  ): Promise<any> {
     console.log('Submitting ESG assessment to Lambda:', {
       company,
       assessment,
@@ -54,6 +54,8 @@ export class NewLambdaService {
 
       const result = await response.json();
       console.log('Lambda response:', result);
+      
+      return result; // Return the results for visualization
 
     } catch (error) {
       console.error('Error submitting to Lambda:', error);
