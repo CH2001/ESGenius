@@ -147,18 +147,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </section>
         )}
 
-        {/* Profile Pane - Assessment History */}
-        <section>
-          <div className="text-center space-y-4 mb-8">
-            <h2 className="text-3xl font-bold text-primary">Your ESG Journey</h2>
-            <p className="text-lg text-muted-foreground">Track your progress and assessment history</p>
-          </div>
-          <ProfilePane 
-            business={business}
-            hasCompletedAssessment={hasCompletedAssessment}
-            onViewResults={onViewResults}
-          />
-        </section>
 
         {/* Details about the application - only show when no assessment completed */}
         {!hasCompletedAssessment && (

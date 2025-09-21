@@ -226,7 +226,7 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
     const requiredFields = currentCriterion.fields.filter(field => field.required);
     return requiredFields.every(field => {
       const value = fieldResponses[field.id];
-      if (field.type === 'boolean') return value !== undefined;
+      if (field.type === 'boolean') return value !== undefined || value === false;
       return value !== undefined && value !== '' && value !== null;
     });
   };

@@ -43,6 +43,12 @@ export const mockESGFrameworks: ESGFramework[] = [
                 required: true
               },
               {
+                id: 'renewable-energy-used',
+                label: 'Use of renewable energy',
+                type: 'boolean',
+                required: true
+              },
+              {
                 id: 'renewable-usage-type',
                 label: 'Renewable Energy Usage',
                 type: 'multiselect',
@@ -69,19 +75,6 @@ export const mockESGFrameworks: ESGFramework[] = [
                 type: 'textarea',
                 required: false,
                 placeholder: 'Describe energy efficiency measures if any'
-              },
-              {
-                id: 'renewable-energy-used',
-                label: 'Use of renewable energy',
-                type: 'boolean',
-                required: true
-              },
-              {
-                id: 'renewable-energy-type',
-                label: 'Type of renewable energy (if yes)',
-                type: 'multiselect',
-                required: false,
-                options: ['Solar', 'Biomass', 'Hydro', 'Wind', 'Other']
               },
               {
                 id: 'energy-efficiency-led',
@@ -321,12 +314,6 @@ export const mockESGFrameworks: ESGFramework[] = [
                 required: true,
                 unit: 'incidents',
                 placeholder: 'Enter total workplace accidents, injuries, near-misses'
-              },
-              {
-                id: 'safety-training-conducted',
-                label: 'Safety training conducted',
-                type: 'boolean',
-                required: true
               },
               {
                 id: 'accident-incident-tracking',
