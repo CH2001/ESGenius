@@ -80,7 +80,7 @@ class LambdaService {
 
     try {
       // Use your AWS API Gateway endpoint
-      const lambdaEndpoint = 'https://09aoixhak3.execute-api.us-east-1.amazonaws.com';
+      const lambdaEndpoint = 'https://09aoixhak3.execute-api.us-east-1.amazonaws.com/esg';
       console.log('✅ Using Lambda endpoint:', lambdaEndpoint);
       
       // Flatten all field responses into a single object as expected by your Lambda
