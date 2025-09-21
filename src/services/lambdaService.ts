@@ -102,6 +102,7 @@ class LambdaService {
     console.log('🚀 ESG Assessment Submission Started');
     console.log('📊 Assessment Data:', {
       businessName: data.business.name,
+      data: data.business, 
       framework: data.framework,
       responseCount: data.responses.length,
       dataSize: JSON.stringify(data).length + ' bytes'
