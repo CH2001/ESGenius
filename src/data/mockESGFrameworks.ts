@@ -40,13 +40,13 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'sub-metering',
                 label: 'Presence of Sub-metering',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'renewable-energy-used',
                 label: 'Use of renewable energy',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'renewable-usage-type',
@@ -67,7 +67,7 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'energy-efficiency-measures',
                 label: 'Energy Efficiency Measures Implemented',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'efficiency-details',
@@ -80,19 +80,19 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'energy-efficiency-led',
                 label: 'LED lighting implemented',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'energy-efficiency-equipment',
                 label: 'Efficient equipment used',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'energy-audits-conducted',
                 label: 'Energy audits conducted',
                 type: 'boolean',
-                required: true
+                required: false
               }
             ],
             scoringGuideline: 'Score based on energy tracking completeness, renewable usage, and efficiency measures'
@@ -130,25 +130,25 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'recycling-practices',
                 label: 'Active Recycling Practices',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'recycling-paper',
                 label: 'Paper recycling practices',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'recycling-plastics',
                 label: 'Plastics recycling practices',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'recycling-ewaste',
                 label: 'E-waste recycling practices',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'recycling-percentage',
@@ -162,7 +162,7 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'hazardous-waste-handling',
                 label: 'Hazardous waste handling procedures',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'recycling-details',
@@ -201,25 +201,25 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'conservation-measures',
                 label: 'Water Conservation Measures Implemented',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'rainwater-harvesting',
                 label: 'Rainwater harvesting implemented',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'water-recycling',
                 label: 'Water recycling systems',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'water-efficiency-devices',
                 label: 'Water efficiency devices installed',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'conservation-details',
@@ -242,13 +242,13 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'iso-14001',
                 label: 'ISO 14001 certification',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'green-building-index',
                 label: 'Green Building Index certification',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'other-env-certifications',
@@ -278,7 +278,7 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'minimum-wage-compliance',
                 label: 'Minimum Wage Compliance',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'lowest-wage',
@@ -292,13 +292,13 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'overtime-tracking',
                 label: 'Overtime Tracking and Pay',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'statutory-contributions',
                 label: 'EPF/SOCSO/EIS Contributions',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'safety-training-frequency',
@@ -319,7 +319,7 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'accident-incident-tracking',
                 label: 'Accidents/incident tracking system',
                 type: 'boolean',
-                required: true
+                required: false
               }
             ],
             scoringGuideline: 'Score based on wage compliance, benefits provision, and safety record'
@@ -351,31 +351,31 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'non-discrimination-policy',
                 label: 'Non-discrimination Policy in Place',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'fair-employment-policy',
                 label: 'Non-discrimination / fair employment policy',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'pwd-hiring',
                 label: 'Initiatives for hiring persons with disabilities',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'women-empowerment',
                 label: 'Women empowerment initiatives',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'flexible-work',
                 label: 'Flexible work arrangements',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'inclusion-details',
@@ -406,7 +406,7 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'grievance-mechanism',
                 label: 'Grievance mechanism in place',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'employee-engagement-details',
@@ -436,43 +436,43 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'code-of-ethics',
                 label: 'Code of Ethics in Place',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'anti-corruption-policy',
                 label: 'Anti-corruption Policy in Place',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'supplier-esg-policy',
                 label: 'Supplier ESG Policy in Place',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'esg-committee-owner',
                 label: 'ESG Committee/Owner Designated',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'whistleblowing-channel',
                 label: 'Whistleblowing channel established',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'esg-board-meetings',
                 label: 'ESG responsibility included in board/management meetings',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'supplier-esg-clauses',
                 label: 'ESG clauses in supplier contracts',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'governance-details',
@@ -509,13 +509,13 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'supplier-assessment',
                 label: 'Supplier ESG Assessment Conducted',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'supplier-esg-risk-assessment',
                 label: 'Do you assess suppliers for ESG risks?',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'supplier-compliance-rate',
@@ -547,7 +547,7 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'new-sustainable-products',
                 label: 'New products or services with sustainability focus',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'sustainable-products-description',
@@ -560,13 +560,13 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'circular-economy-practices',
                 label: 'Circular economy practices (reuse, repair, recycle)',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'sustainability-focus',
                 label: 'Innovation Has Sustainability Focus',
                 type: 'boolean',
-                required: true
+                required: false
               }
             ],
             scoringGuideline: 'Score based on innovation investment and sustainability focus'
@@ -582,7 +582,7 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'green-purchasing-policy',
                 label: 'Green purchasing policy in place',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'sustainable-procurement-details',
@@ -612,7 +612,7 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'esg-workshops-participation',
                 label: 'Participation in ESG workshops/training',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'staff-trained-count',
@@ -643,7 +643,7 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'esg-green-financing',
                 label: 'Accessed ESG/green financing',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'financing-type',
@@ -656,7 +656,7 @@ export const mockESGFrameworks: ESGFramework[] = [
                 id: 'government-incentives',
                 label: 'Applied for government incentives (MyHIJAU, tax rebates)',
                 type: 'boolean',
-                required: true
+                required: false
               },
               {
                 id: 'financing-details',
