@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft } from 'lucide-react';
 import { ESGAssessmentForm } from '@/components/ESGAssessmentForm';
+import { NSRFDocumentUpload } from '@/components/NSRFDocumentUpload';
 import { CompanyService } from '@/services/companyService';
 import { Company, AVAILABLE_FRAMEWORKS } from '@/types/database';
 import type { Assessment } from '@/types/database';
@@ -23,11 +24,12 @@ interface AssessmentPageProps {
 }
 
 export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBack }) => {
-  const [step, setStep] = useState<'company-selection' | 'framework-selection' | 'esg'>('company-selection');
+  const [step, setStep] = useState<'company-selection' | 'framework-selection' | 'esg' | 'nsrf-upload'>('company-selection');
   const [companies, setCompanies] = useState<Company[]>([mockCompany as Company]); // Start with mock company
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedFrameworks, setSelectedFrameworks] = useState<string[]>(['esg-i']);
   const [currentUser, setCurrentUser] = useState<DemoUser | null>(null);
+  const [nsrfResults, setNsrfResults] = useState<any>(null);
 
   useEffect(() => {
     // Ensure Supabase auth is initialized
@@ -117,7 +119,13 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
       toast.error('Please select at least one framework');
       return;
     }
-    setStep('esg');
+    
+    // If NSRF is selected, go to document upload first
+    if (selectedFrameworks.includes('nsrf')) {
+      setStep('nsrf-upload');
+    } else {
+      setStep('esg');
+    }
   };
 
   const handleESGComplete = async (responses: ESGResponse[]) => {
@@ -151,7 +159,10 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
         company: selectedCompany,
         assessment: mockAssessment,
         responses,
-        results: lambdaResults // Pass Lambda results for visualization
+        results: { 
+          ...lambdaResults, 
+          nsrfAnalysis: nsrfResults?.nsrfAnalysis // Include NSRF results if available
+        }
       });
     } catch (error) {
       console.error('Error completing assessment:', error);
@@ -159,11 +170,29 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
     }
   };
 
+  const handleNSRFAnalysisComplete = (results: any) => {
+    setNsrfResults(results);
+    // After NSRF analysis, continue to ESG assessment if other frameworks are selected
+    if (selectedFrameworks.some(f => f !== 'nsrf')) {
+      setStep('esg');
+    } else {
+      // If only NSRF was selected, complete the assessment
+      handleESGComplete([]);
+    }
+  };
+
   const handleBack = () => {
     if (step === 'framework-selection') {
       setStep('company-selection');
-    } else if (step === 'esg') {
+    } else if (step === 'nsrf-upload') {
       setStep('framework-selection');
+    } else if (step === 'esg') {
+      // Go back to NSRF upload if it was selected, otherwise framework selection
+      if (selectedFrameworks.includes('nsrf')) {
+        setStep('nsrf-upload');
+      } else {
+        setStep('framework-selection');
+      }
     } else {
       onBack();
     }
@@ -273,11 +302,11 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
             <div className="space-y-4">
               {AVAILABLE_FRAMEWORKS.map((framework) => (
                 <div key={framework.id} className="flex items-start space-x-3 p-4 border rounded-lg">
-                  <Checkbox
+                   <Checkbox
                     id={framework.id}
                     checked={selectedFrameworks.includes(framework.id)}
                     onCheckedChange={() => handleFrameworkToggle(framework.id)}
-                    disabled={framework.id !== 'esg-i'} // Only ESG-i is implemented
+                    disabled={framework.id !== 'esg-i' && framework.id !== 'nsrf'} // ESG-i and NSRF are implemented
                   />
                   <div className="flex-1">
                     <label htmlFor={framework.id} className={`cursor-pointer ${framework.id !== 'esg-i' ? 'opacity-60' : ''}`}>
@@ -305,6 +334,15 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
           </CardContent>
         </Card>
       </div>
+    );
+  }
+
+  if (step === 'nsrf-upload') {
+    return (
+      <NSRFDocumentUpload
+        onAnalysisComplete={handleNSRFAnalysisComplete}
+        onBack={handleBack}
+      />
     );
   }
 

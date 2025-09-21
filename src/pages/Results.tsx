@@ -230,25 +230,25 @@ export const Results: React.FC<ResultsProps> = ({
                     </p>
                   </div>
                   <div className="text-right space-y-2">
-                    {framework === 'NSRF Framework' ? (
+                    {results?.nsrfAnalysis ? (
                       <>
                         <div className="text-2xl font-bold text-primary">
-                          {overallScore.toFixed(1)}%
+                          {Math.round((results.nsrfAnalysis.strengths?.length || 0) / ((results.nsrfAnalysis.strengths?.length || 0) + (results.nsrfAnalysis.weaknesses?.length || 0)) * 100) || 0}%
                         </div>
                         <Badge 
                           variant={
-                            overallScore >= 75 ? 'default' : 
-                            overallScore >= 50 ? 'secondary' : 
+                            Math.round((results.nsrfAnalysis.strengths?.length || 0) / ((results.nsrfAnalysis.strengths?.length || 0) + (results.nsrfAnalysis.weaknesses?.length || 0)) * 100) >= 75 ? 'default' : 
+                            Math.round((results.nsrfAnalysis.strengths?.length || 0) / ((results.nsrfAnalysis.strengths?.length || 0) + (results.nsrfAnalysis.weaknesses?.length || 0)) * 100) >= 50 ? 'secondary' : 
                             'outline'
                           }
                           className={
-                            overallScore >= 75 ? 'bg-green-500/10 text-green-700 border-green-200' :
-                            overallScore >= 50 ? 'bg-yellow-500/10 text-yellow-700 border-yellow-200' :
+                            Math.round((results.nsrfAnalysis.strengths?.length || 0) / ((results.nsrfAnalysis.strengths?.length || 0) + (results.nsrfAnalysis.weaknesses?.length || 0)) * 100) >= 75 ? 'bg-green-500/10 text-green-700 border-green-200' :
+                            Math.round((results.nsrfAnalysis.strengths?.length || 0) / ((results.nsrfAnalysis.strengths?.length || 0) + (results.nsrfAnalysis.weaknesses?.length || 0)) * 100) >= 50 ? 'bg-yellow-500/10 text-yellow-700 border-yellow-200' :
                             'bg-red-500/10 text-red-700 border-red-200'
                           }
                         >
-                          {overallScore >= 75 ? 'Financing-Ready (75+)' : 
-                           overallScore >= 50 ? 'Progressing (50-74)' : 
+                          {Math.round((results.nsrfAnalysis.strengths?.length || 0) / ((results.nsrfAnalysis.strengths?.length || 0) + (results.nsrfAnalysis.weaknesses?.length || 0)) * 100) >= 75 ? 'Financing-Ready (75+)' : 
+                           Math.round((results.nsrfAnalysis.strengths?.length || 0) / ((results.nsrfAnalysis.strengths?.length || 0) + (results.nsrfAnalysis.weaknesses?.length || 0)) * 100) >= 50 ? 'Progressing (50-74)' : 
                            'Needs Foundation (0-49)'}
                         </Badge>
                       </>
@@ -266,8 +266,11 @@ export const Results: React.FC<ResultsProps> = ({
                 </div>
                 <div className="space-y-3">
                   <Progress 
-                    value={framework === 'NSRF Framework' ? overallScore : 0} 
-                    className={`h-3 ${framework !== 'NSRF Framework' ? 'opacity-50' : ''}`}
+                    value={results?.nsrfAnalysis ? 
+                      Math.round((results.nsrfAnalysis.strengths?.length || 0) / ((results.nsrfAnalysis.strengths?.length || 0) + (results.nsrfAnalysis.weaknesses?.length || 0)) * 100) || 0 :
+                      0
+                    } 
+                    className={`h-3 ${!results?.nsrfAnalysis ? 'opacity-50' : ''}`}
                   />
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Needs Foundation (0-49)</span>
@@ -290,45 +293,29 @@ export const Results: React.FC<ResultsProps> = ({
                     </p>
                   </div>
                   <div className="text-right space-y-2">
-                    {framework === 'i-ESG (qualitative)' || framework === 'i-ESG Framework' ? (
-                      <>
-                        <div className="text-2xl font-bold text-primary">
-                          {overallScore.toFixed(1)}%
-                        </div>
-                        <Badge 
-                          variant={
-                            overallScore >= 75 ? 'default' : 
-                            overallScore >= 50 ? 'secondary' : 
-                            'outline'
-                          }
-                          className={
-                            overallScore >= 75 ? 'bg-green-500/10 text-green-700 border-green-200' :
-                            overallScore >= 50 ? 'bg-yellow-500/10 text-yellow-700 border-yellow-200' :
-                            'bg-red-500/10 text-red-700 border-red-200'
-                          }
-                        >
-                          {overallScore >= 75 ? 'Financing-Ready (75+)' : 
-                           overallScore >= 50 ? 'Progressing (50-74)' : 
-                           'Needs Foundation (0-49)'}
-                        </Badge>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-lg text-muted-foreground">
-                          Pending Review
-                        </div>
-                        <Badge variant="outline" className="bg-gray-500/10 text-gray-600 border-gray-200">
-                          Not Assessed
-                        </Badge>
-                      </>
-                    )}
+                    <div className="text-2xl font-bold text-primary">
+                      {overallScore.toFixed(1)}%
+                    </div>
+                    <Badge 
+                      variant={
+                        overallScore >= 75 ? 'default' : 
+                        overallScore >= 50 ? 'secondary' : 
+                        'outline'
+                      }
+                      className={
+                        overallScore >= 75 ? 'bg-green-500/10 text-green-700 border-green-200' :
+                        overallScore >= 50 ? 'bg-yellow-500/10 text-yellow-700 border-yellow-200' :
+                        'bg-red-500/10 text-red-700 border-red-200'
+                      }
+                    >
+                      {overallScore >= 75 ? 'Financing-Ready (75+)' : 
+                       overallScore >= 50 ? 'Progressing (50-74)' : 
+                       'Needs Foundation (0-49)'}
+                    </Badge>
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <Progress 
-                    value={framework === 'i-ESG (qualitative)' || framework === 'i-ESG Framework' ? overallScore : 0} 
-                    className={`h-3 ${framework !== 'i-ESG (qualitative)' && framework !== 'i-ESG Framework' ? 'opacity-50' : ''}`}
-                  />
+                  <Progress value={overallScore} className="h-3" />
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Needs Foundation (0-49)</span>
                     <span>Progressing (50-74)</span>
@@ -339,6 +326,54 @@ export const Results: React.FC<ResultsProps> = ({
             </div>
           </CardContent>
         </Card>
+
+        {/* NSRF Analysis Results */}
+        {results?.nsrfAnalysis && (
+          <Card>
+            <CardHeader>
+              <CardTitle>NSRF Analysis Results</CardTitle>
+              <CardDescription>Detailed analysis based on your sustainability report</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Strengths */}
+              {results.nsrfAnalysis.strengths && results.nsrfAnalysis.strengths.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-3 text-green-700">Identified Strengths</h3>
+                  <div className="space-y-2">
+                    {results.nsrfAnalysis.strengths.map((strength: string, index: number) => (
+                      <div key={index} className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm">{strength}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Weaknesses and Recommendations */}
+              {results.nsrfAnalysis.weaknesses && results.nsrfAnalysis.weaknesses.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-3 text-orange-700">Areas for Improvement</h3>
+                  <div className="space-y-4">
+                    {results.nsrfAnalysis.weaknesses.map((weakness: any, index: number) => (
+                      <div key={index} className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                        <div className="mb-2">
+                          <span className="inline-block px-2 py-1 bg-orange-200 text-orange-800 text-xs font-semibold rounded">
+                            {weakness.nsrfPrinciple}
+                          </span>
+                        </div>
+                        <p className="text-sm mb-2 font-medium">{weakness.finding}</p>
+                        <div className="mt-2 p-2 bg-white rounded border-l-4 border-blue-400">
+                          <p className="text-xs text-gray-600 font-semibold mb-1">Recommendation:</p>
+                          <p className="text-sm text-gray-700">{weakness.recommendation}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Category Breakdown */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
