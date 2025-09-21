@@ -24,7 +24,7 @@ interface AssessmentPageProps {
 
 export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBack }) => {
   const [step, setStep] = useState<'company-selection' | 'framework-selection' | 'esg'>('company-selection');
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([mockCompany as Company]); // Start with mock company
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedFrameworks, setSelectedFrameworks] = useState<string[]>(['esg-i']);
   const [currentUser, setCurrentUser] = useState<DemoUser | null>(null);
@@ -59,7 +59,12 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
   }, []);
 
   const loadCompanies = async () => {
-    console.log('Loading companies...');
+    console.log('Loading companies...', { currentUser });
+    
+    // Always ensure we have at least the mock company available
+    setCompanies([mockCompany as Company]);
+    console.log('Set mock company as fallback');
+    
     if (currentUser) {
       try {
         // Get current Supabase user
@@ -69,41 +74,24 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
         if (user) {
           // Try to get companies from database using Supabase user ID
           const companies = await CompanyService.getCompaniesByUser(user.id);
-          console.log('Found companies:', companies.length);
+          console.log('Found companies from DB:', companies.length);
           
           if (companies.length > 0) {
             setCompanies(companies);
+            console.log('Using database companies');
           } else {
-            console.log('No companies found, creating demo company...');
-            // Create demo company with proper Supabase user ID
-            const demoCompanyData = {
-              ...mockCompany,
-              user_id: user.id // Use actual Supabase user ID
-            };
-            delete (demoCompanyData as any).id; // Remove id so it gets auto-generated
-            delete (demoCompanyData as any).created_at;
-            delete (demoCompanyData as any).updated_at;
-            
-            console.log('Creating company with data:', demoCompanyData);
-            const createdCompany = await CompanyService.createCompany(demoCompanyData);
-            if (createdCompany) {
-              console.log('Company created successfully:', createdCompany);
-              setCompanies([createdCompany]);
-            } else {
-              console.log('Failed to create company, using fallback');
-              setCompanies([mockCompany as Company]);
-            }
+            console.log('No companies found in DB, keeping mock company');
+            // Keep the mock company that was already set
           }
         } else {
-          console.log('No Supabase user, using fallback mock data');
-          // Fallback to mock data if no auth user
-          setCompanies([mockCompany as Company]);
+          console.log('No Supabase user, keeping mock company');
         }
       } catch (error) {
         console.error('Error loading companies:', error);
-        // Fallback to mock data on error
-        setCompanies([mockCompany as Company]);
+        console.log('Error occurred, keeping mock company');
       }
+    } else {
+      console.log('No current user, using mock company');
     }
   };
 
@@ -217,10 +205,7 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
           <CardContent className="space-y-4">
             {companies.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">No companies found. Please create a company first.</p>
-                <Button onClick={() => window.location.href = '/company-profile'}>
-                  Go to Company Profile
-                </Button>
+                <p className="text-muted-foreground mb-4">Loading companies...</p>
               </div>
             ) : (
               <>
