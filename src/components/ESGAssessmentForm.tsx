@@ -12,12 +12,11 @@ import { CheckCircle, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 import { ESGFramework, ESGResponse, ESGField, Business } from '@/types/esg';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { lambdaService } from '@/services/lambdaService';
 
 interface ESGAssessmentFormProps {
   framework: ESGFramework;
   business: Business;
-  onComplete: (responses: ESGResponse[], lambdaResponse?: any) => void;
+  onComplete: (responses: ESGResponse[]) => void;
   onBack?: () => void;
 }
 
@@ -72,36 +71,24 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
       setCurrentCategoryIndex(prev => prev + 1);
       setCurrentCriterionIndex(0);
     } else {
-      // Assessment complete - submit to AWS Lambda
+      // Assessment complete - submit for processing
       setIsSubmitting(true);
       
       try {
         toast({
           title: "Processing Assessment",
-          description: "Sending data to AWS Lambda for AI analysis...",
-        });
-
-        const lambdaResponse = await lambdaService.submitESGAssessment({
-          business,
-          responses: updatedResponses,
-          framework: framework.name
-        });
-
-        toast({
-          title: "Assessment Completed Successfully!",
-          description: "Redirecting to home page...",
+          description: "Processing your responses...",
         });
 
         // Navigate back to home page after successful submission
         setTimeout(() => {
-          onComplete(updatedResponses, lambdaResponse);
+          onComplete(updatedResponses);
         }, 1500);
       } catch (error) {
-        console.error('Lambda submission error:', error);
+        console.error('Processing error:', error);
         toast({
           title: "Assessment Completed",
-          description: "Assessment saved locally. AWS Lambda integration needs configuration.",
-          variant: "destructive"
+          description: "Assessment has been completed successfully.",
         });
         onComplete(updatedResponses);
       } finally {

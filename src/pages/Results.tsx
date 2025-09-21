@@ -77,12 +77,12 @@ export const Results: React.FC<ResultsProps> = ({ profile, company, assessment, 
     }
   };
 
-  // Use the selected result's lambda response if available
-  const lambdaResponse = selectedResult?.lambda_response;
+  // Use the selected result's response if available
+  const apiResponse = selectedResult?.lambda_response;
 
   // Calculate scores using existing logic
   const calculateScores = () => {
-    if (lambdaResponse?.ok) {
+    if (apiResponse?.ok) {
       // Use iESG response structure
       return {
         overall: 75, // Mock overall score
@@ -249,7 +249,7 @@ export const Results: React.FC<ResultsProps> = ({ profile, company, assessment, 
             frameworkName="ESG Assessment Framework"
           />
 
-          {/* Lambda Response Details */}
+          {/* API Response Details */}
           {selectedResult.success && selectedResult.lambda_response?.ok && (
             <Card>
               <CardHeader>

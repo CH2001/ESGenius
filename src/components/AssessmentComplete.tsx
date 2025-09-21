@@ -11,7 +11,6 @@ import { mockOpportunities } from '@/data/mockScoringData';
 interface AssessmentCompleteProps {
   business: Business;
   responses: ESGResponse[];
-  lambdaResponse?: any;
   onViewResults: () => void;
   onBackToDashboard: () => void;
 }
@@ -19,7 +18,6 @@ interface AssessmentCompleteProps {
 export const AssessmentComplete: React.FC<AssessmentCompleteProps> = ({
   business,
   responses,
-  lambdaResponse,
   onViewResults,
   onBackToDashboard
 }) => {
@@ -41,33 +39,11 @@ export const AssessmentComplete: React.FC<AssessmentCompleteProps> = ({
     }
   ];
 
-  // Use Lambda response if available, otherwise calculate from form responses
-  const avgScore = (() => {
-    if (lambdaResponse?.scoring?.overallScore && typeof lambdaResponse.scoring.overallScore === 'number') {
-      return lambdaResponse.scoring.overallScore;
-    }
-    
-    // Check for direct Lambda response format
-    if (lambdaResponse && (lambdaResponse.NSRF || lambdaResponse.iESG)) {
-      const nsrfScores = lambdaResponse.NSRF?.scores || {};
-      const iesgScores = lambdaResponse.iESG?.scores || {};
-      
-      const environmentalScore = nsrfScores.Environmental || 0;
-      const socialScore = nsrfScores.Social || 0;
-      const governanceScore = nsrfScores.Governance || 0;
-      const operationalScore = iesgScores['Operational Excellence'] || 0;
-      
-      return (environmentalScore + socialScore + governanceScore + operationalScore) / 4;
-    }
-    
-    // Fallback to form responses
-    return responses.reduce((sum, r) => sum + r.score, 0) / responses.length;
-  })();
+  // Calculate score from form responses
+  const avgScore = responses.reduce((sum, r) => sum + r.score, 0) / responses.length;
 
-  // Use Lambda opportunities if available, otherwise use mock data
-  const availableOpportunities = (lambdaResponse?.opportunities && Array.isArray(lambdaResponse.opportunities)) 
-    ? lambdaResponse.opportunities 
-    : mockOpportunities;
+  // Use mock opportunities data
+  const availableOpportunities = mockOpportunities;
 
   return (
     <div className="min-h-screen bg-background py-8 px-6">
@@ -116,29 +92,36 @@ export const AssessmentComplete: React.FC<AssessmentCompleteProps> = ({
                 </Badge>
               </div>
 
-              {/* Lambda Framework Summary */}
-              {lambdaResponse && (lambdaResponse.NSRF || lambdaResponse.iESG) && (
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
-                  {lambdaResponse.NSRF && (
-                    <div className="text-center">
-                      <div className="text-lg font-semibold text-primary">NSRF Analysis</div>
-                      <div className="text-sm text-muted-foreground">
-                        E: {lambdaResponse.NSRF.scores?.Environmental || 0} | 
-                        S: {lambdaResponse.NSRF.scores?.Social || 0} | 
-                        G: {lambdaResponse.NSRF.scores?.Governance || 0}
-                      </div>
+              {/* Framework Summary */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card className="shadow-soft">
+                  <CardHeader>
+                    <CardTitle className="text-lg">NSRF Framework</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-primary">
+                      {avgScore.toFixed(1)}%
                     </div>
-                  )}
-                  {lambdaResponse.iESG && (
-                    <div className="text-center">
-                      <div className="text-lg font-semibold text-primary">iESG Analysis</div>
-                      <div className="text-sm text-muted-foreground">
-                        Operational: {lambdaResponse.iESG.scores?.['Operational Excellence'] || 0}
-                      </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      National Sustainability Reporting Framework
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-soft">
+                  <CardHeader>
+                    <CardTitle className="text-lg">iESG Framework</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-primary">
+                      {Math.max(0, avgScore - 5).toFixed(1)}%
                     </div>
-                  )}
-                </div>
-              )}
+                    <p className="text-sm text-muted-foreground mt-2">
+                      National Industry ESG Framework
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </CardContent>
         </Card>

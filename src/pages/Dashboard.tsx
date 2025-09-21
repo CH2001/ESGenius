@@ -15,13 +15,12 @@ import {
   Gift,
   DollarSign,
   Users,
-  Leaf
+  User
 } from 'lucide-react';
 import { ESGeniusLogo } from '@/components/ESGeniusLogo';
 import { CompanyProfile } from '@/components/CompanyProfile';
 import { OpportunitiesSection } from '@/components/OpportunitiesSection';
 import { ProfilePane } from '@/components/ProfilePane';
-import { Settings } from '@/components/Settings';
 import { Business } from '@/types/esg';
 import { FrameworkScore, OpportunityRecommendation } from '@/types/scoring';
 import { mockOpportunities, calculateComplianceLevel, getComplianceLevelColor, getComplianceLevelLabel } from '@/data/mockScoringData';
@@ -97,7 +96,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <ESGeniusLogo size="lg" />
-          <Settings />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => window.location.href = '/profile'}
+            className="hover:bg-muted"
+            title="Profile Management"
+          >
+            <User className="h-5 w-5" />
+          </Button>
         </div>
       </header>
 
@@ -255,7 +262,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     {business ? 'Continue Your ESG Journey' : 'Ready to Get Started?'}
                   </h3>
                   <p className="text-muted-foreground">
-                    Our AI-powered assessment will evaluate your business against Malaysian ESG frameworks 
+                    Our comprehensive assessment will evaluate your business against Malaysian ESG frameworks 
                     and provide personalized recommendations for improvement and funding opportunities.
                   </p>
                   <div className="space-y-2">

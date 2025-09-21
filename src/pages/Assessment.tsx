@@ -108,7 +108,7 @@ export const AssessmentPage: React.FC<NewAssessmentProps> = ({ onComplete, onBac
       });
 
       if (assessment) {
-        // Submit to Lambda service
+        // Submit for processing
         await NewLambdaService.submitESGAssessment(
           selectedProfile,
           selectedCompany,
