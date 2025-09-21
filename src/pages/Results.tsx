@@ -198,21 +198,39 @@ export const Results: React.FC<ResultsProps> = ({
           ))}
         </div>
 
-        {/* Gaps Detected */}
-        {results?.gaps_detected && results.gaps_detected.length > 0 && (
+        {/* Framework Compliance Status */}
+        {results?.baseline_checklist && (
           <Card>
             <CardHeader>
-              <CardTitle>Key Gaps Identified</CardTitle>
-              <CardDescription>Areas requiring immediate attention based on your assessment</CardDescription>
+              <CardTitle>Framework Compliance Status</CardTitle>
+              <CardDescription>Detailed checklist based on {framework} assessment</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {results.gaps_detected.map((gap: string, index: number) => (
-                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-destructive/5 border-l-4 border-destructive">
-                    <div className="mt-0.5">
-                      <div className="w-2 h-2 rounded-full bg-destructive" />
+              <div className="space-y-6">
+                {Object.entries(results.baseline_checklist).map(([category, items]: [string, any]) => (
+                  <div key={category} className="space-y-3">
+                    <h4 className="font-semibold text-lg text-primary">{category}</h4>
+                    <div className="space-y-2">
+                      {Object.entries(items).map(([item, status]: [string, any]) => (
+                        <div key={item} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                          <span className="text-sm font-medium">{item}</span>
+                          <Badge 
+                            variant={
+                              status === 'Yes' ? 'default' : 
+                              status === 'No' ? 'destructive' : 
+                              'secondary'
+                            }
+                            className={
+                              status === 'Yes' ? 'bg-green-500/10 text-green-700 border-green-200' :
+                              status === 'No' ? 'bg-red-500/10 text-red-700 border-red-200' :
+                              'bg-yellow-500/10 text-yellow-700 border-yellow-200'
+                            }
+                          >
+                            {status}
+                          </Badge>
+                        </div>
+                      ))}
                     </div>
-                    <p className="text-sm text-foreground flex-1">{gap}</p>
                   </div>
                 ))}
               </div>
