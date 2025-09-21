@@ -40,12 +40,16 @@ export const Results: React.FC<ResultsProps> = ({
   const readinessStage = report.header?.readiness_stage || results?.header?.readiness_stage || 'Unknown';
   const executiveSummary = report.executive_summary || results?.executive_summary || '';
   
-  // Calculate scores from baseline checklist
+  // Calculate scores from baseline checklist - sync with Framework Compliance Status
   const calculateCategoryScore = (categoryData: any) => {
     if (!categoryData) return 0;
     const items = Object.values(categoryData);
     const yesCount = items.filter((item: any) => item === 'Yes').length;
-    return Math.round((yesCount / items.length) * 100);
+    const totalItems = items.length;
+    const unknownCount = items.filter((item: any) => item === 'Unknown').length;
+    // For scoring, treat Unknown as partial (0.5) to be more realistic
+    const partialScore = (yesCount + (unknownCount * 0.3)) / totalItems;
+    return Math.round(partialScore * 100);
   };
 
   const baseline = results?.baseline_checklist || {};

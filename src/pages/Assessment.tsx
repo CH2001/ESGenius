@@ -242,7 +242,7 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
   if (step === 'framework-selection') {
     return (
       <div className="container mx-auto py-8 space-y-6">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="mb-6 space-y-4">
           <Button variant="outline" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Company Selection
