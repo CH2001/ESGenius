@@ -45,15 +45,7 @@ export type Database = {
           lambda_response?: Json | null
           success?: boolean
         }
-        Relationships: [
-          {
-            foreignKeyName: "assessment_results_assessment_id_fkey"
-            columns: ["assessment_id"]
-            isOneToOne: false
-            referencedRelation: "assessments"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       assessments: {
         Row: {
@@ -61,7 +53,6 @@ export type Database = {
           created_at: string
           frameworks: string[]
           id: string
-          profile_id: string
           responses: Json | null
           status: string
           updated_at: string
@@ -71,7 +62,6 @@ export type Database = {
           created_at?: string
           frameworks: string[]
           id?: string
-          profile_id: string
           responses?: Json | null
           status?: string
           updated_at?: string
@@ -81,95 +71,30 @@ export type Database = {
           created_at?: string
           frameworks?: string[]
           id?: string
-          profile_id?: string
           responses?: Json | null
           status?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "assessments_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assessments_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       companies: {
-        Row: {
-          created_at: string
-          employees: number
-          established_year: number
-          id: string
-          industry: string
-          location: string
-          name: string
-          profile_id: string
-          registration_number: string
-          revenue: number
-          size: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          employees: number
-          established_year: number
-          id?: string
-          industry: string
-          location: string
-          name: string
-          profile_id: string
-          registration_number: string
-          revenue: number
-          size: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          employees?: number
-          established_year?: number
-          id?: string
-          industry?: string
-          location?: string
-          name?: string
-          profile_id?: string
-          registration_number?: string
-          revenue?: number
-          size?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "companies_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles: {
         Row: {
           address: string | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string
           description: string | null
-          employees: number | null
-          established_year: number | null
+          employees: number
+          established_year: number
           id: string
-          industry: string | null
-          organization_name: string
+          industry: string
+          location: string
+          name: string
+          registration_number: string | null
+          revenue: number
+          size: string
           updated_at: string
-          user_id: string | null
+          user_id: string
           website: string | null
         }
         Insert: {
@@ -178,13 +103,17 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           description?: string | null
-          employees?: number | null
-          established_year?: number | null
+          employees?: number
+          established_year: number
           id?: string
-          industry?: string | null
-          organization_name: string
+          industry: string
+          location: string
+          name: string
+          registration_number?: string | null
+          revenue?: number
+          size?: string
           updated_at?: string
-          user_id?: string | null
+          user_id: string
           website?: string | null
         }
         Update: {
@@ -193,13 +122,17 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           description?: string | null
-          employees?: number | null
-          established_year?: number | null
+          employees?: number
+          established_year?: number
           id?: string
-          industry?: string | null
-          organization_name?: string
+          industry?: string
+          location?: string
+          name?: string
+          registration_number?: string | null
+          revenue?: number
+          size?: string
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
           website?: string | null
         }
         Relationships: []

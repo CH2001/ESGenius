@@ -6,25 +6,23 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft } from 'lucide-react';
 import { ESGAssessmentForm } from '@/components/ESGAssessmentForm';
-import { ProfileService } from '@/services/profileService';
-import { Profile, Company, AVAILABLE_FRAMEWORKS } from '@/types/database';
+import { CompanyService } from '@/services/companyService';
+import { Company, AVAILABLE_FRAMEWORKS } from '@/types/database';
 import type { Assessment } from '@/types/database';
 import { ESGResponse } from '@/types/esg';
 import { NewLambdaService } from '@/services/newLambdaService';
-import { demoAuth, DemoUser, mockProfile, mockCompany } from '@/services/demoAuthService';
+import { demoAuth, DemoUser, mockCompany } from '@/services/demoAuthService';
 import { toast } from 'sonner';
 import { mockESGFrameworks } from '@/data/mockESGFrameworks';
 
-interface NewAssessmentProps {
-  onComplete: (data: { profile: Profile; company: Company; assessment: Assessment; responses: ESGResponse[] }) => void;
+interface AssessmentPageProps {
+  onComplete: (data: { company: Company; assessment: Assessment; responses: ESGResponse[] }) => void;
   onBack: () => void;
 }
 
-export const AssessmentPage: React.FC<NewAssessmentProps> = ({ onComplete, onBack }) => {
-  const [step, setStep] = useState<'profile-selection' | 'framework-selection' | 'esg'>('profile-selection');
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBack }) => {
+  const [step, setStep] = useState<'company-selection' | 'framework-selection' | 'esg'>('company-selection');
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedFrameworks, setSelectedFrameworks] = useState<string[]>(['esg-i']);
   const [currentUser, setCurrentUser] = useState<DemoUser | null>(null);
@@ -33,38 +31,18 @@ export const AssessmentPage: React.FC<NewAssessmentProps> = ({ onComplete, onBac
     const unsubscribe = demoAuth.onAuthStateChange((user) => {
       setCurrentUser(user);
       if (user) {
-        loadProfiles(user.id);
+        loadCompanies();
+      } else {
+        onBack();
       }
     });
 
     return unsubscribe;
   }, []);
 
-  const loadProfiles = async (userId: string) => {
+  const loadCompanies = () => {
     // Use demo data instead of trying to fetch from database
-    setProfiles([mockProfile as Profile]);
-    
-    // Load companies for the profile
-    const companiesData: Company[] = [mockCompany as Company];
-    setCompanies(companiesData);
-  };
-
-  const loadCompanies = async (profileId: string) => {
-    try {
-      const companiesData = await ProfileService.getCompaniesByProfile(profileId);
-      setCompanies(companiesData);
-    } catch (error) {
-      console.error('Error loading companies:', error);
-      toast.error('Failed to load companies');
-    }
-  };
-
-  const handleProfileSelect = async (profileId: string) => {
-    const profile = profiles.find(p => p.id === profileId);
-    if (profile) {
-      setSelectedProfile(profile);
-      await loadCompanies(profileId);
-    }
+    setCompanies([mockCompany as Company]);
   };
 
   const handleCompanySelect = (companyId: string) => {
@@ -93,12 +71,11 @@ export const AssessmentPage: React.FC<NewAssessmentProps> = ({ onComplete, onBac
   };
 
   const handleESGComplete = async (responses: ESGResponse[]) => {
-    if (!selectedProfile || !selectedCompany) return;
+    if (!selectedCompany) return;
 
     try {
       // Create assessment record
-      const assessment = await ProfileService.createAssessment({
-        profile_id: selectedProfile.id,
+      const assessment = await CompanyService.createAssessment({
         company_id: selectedCompany.id,
         frameworks: selectedFrameworks,
         responses: responses,
@@ -106,9 +83,7 @@ export const AssessmentPage: React.FC<NewAssessmentProps> = ({ onComplete, onBac
       });
 
       if (assessment) {
-        // Submit for processing
         await NewLambdaService.submitESGAssessment(
-          selectedProfile,
           selectedCompany,
           assessment,
           responses,
@@ -117,7 +92,6 @@ export const AssessmentPage: React.FC<NewAssessmentProps> = ({ onComplete, onBac
 
         toast.success('Assessment completed successfully');
         onComplete({
-          profile: selectedProfile,
           company: selectedCompany,
           assessment,
           responses
@@ -131,7 +105,7 @@ export const AssessmentPage: React.FC<NewAssessmentProps> = ({ onComplete, onBac
 
   const handleBack = () => {
     if (step === 'framework-selection') {
-      setStep('profile-selection');
+      setStep('company-selection');
     } else if (step === 'esg') {
       setStep('framework-selection');
     } else {
@@ -151,7 +125,7 @@ export const AssessmentPage: React.FC<NewAssessmentProps> = ({ onComplete, onBac
     );
   }
 
-  if (step === 'profile-selection') {
+  if (step === 'company-selection') {
     return (
       <div className="container mx-auto py-8 space-y-6">
         <div className="flex items-center gap-4 mb-6">
@@ -161,62 +135,44 @@ export const AssessmentPage: React.FC<NewAssessmentProps> = ({ onComplete, onBac
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Start ESG Assessment</h1>
-            <p className="text-muted-foreground">Select a business profile to assess</p>
+            <p className="text-muted-foreground">Select a company to assess</p>
           </div>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Select Business Profile</CardTitle>
+            <CardTitle>Select Company</CardTitle>
             <CardDescription>
-              Choose which business profile you want to assess for ESG compliance
+              Choose which company you want to assess for ESG compliance
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {profiles.length === 0 ? (
+            {companies.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">No profiles found. Please create a profile first.</p>
+                <p className="text-muted-foreground mb-4">No companies found. Please create a company first.</p>
                 <Button onClick={() => window.location.href = '/profile'}>
-                  Go to Profile Management
+                  Go to Company Profile
                 </Button>
               </div>
             ) : (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="profile-select">Organization Profile</Label>
-                  <Select value={selectedProfile?.id || ''} onValueChange={handleProfileSelect}>
+                  <Label htmlFor="company-select">Company</Label>
+                  <Select value={selectedCompany?.id || ''} onValueChange={handleCompanySelect}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select an organization profile" />
+                      <SelectValue placeholder="Select a company" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border border-border z-50">
-                      {profiles.map((profile) => (
-                        <SelectItem key={profile.id} value={profile.id}>
-                          {profile.organization_name}
+                      {companies.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name} ({company.industry})
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {selectedProfile && (
-                  <div className="space-y-2">
-                    <Label htmlFor="company-select">Company</Label>
-                    <Select value={selectedCompany?.id || ''} onValueChange={handleCompanySelect}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a company" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background border border-border z-50">
-                        {companies.map((company) => (
-                          <SelectItem key={company.id} value={company.id}>
-                            {company.name} ({company.industry})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {selectedProfile && selectedCompany && (
+                {selectedCompany && (
                   <div className="pt-4">
                     <Button onClick={() => setStep('framework-selection')}>
                       Continue to Framework Selection
@@ -237,7 +193,7 @@ export const AssessmentPage: React.FC<NewAssessmentProps> = ({ onComplete, onBac
         <div className="flex items-center gap-4 mb-6">
           <Button variant="outline" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Profile Selection
+            Back to Company Selection
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Select ESG Frameworks</h1>
@@ -253,11 +209,10 @@ export const AssessmentPage: React.FC<NewAssessmentProps> = ({ onComplete, onBac
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {selectedProfile && selectedCompany && (
+            {selectedCompany && (
               <div className="mb-4 p-4 bg-muted/50 rounded-lg">
                 <h4 className="font-semibold">Assessment Details</h4>
                 <p className="text-sm text-muted-foreground">
-                  Organization: {selectedProfile.organization_name} <br />
                   Company: {selectedCompany.name}
                 </p>
               </div>
@@ -302,7 +257,7 @@ export const AssessmentPage: React.FC<NewAssessmentProps> = ({ onComplete, onBac
   }
 
   // ESG Assessment step
-  if (selectedProfile && selectedCompany) {
+  if (selectedCompany) {
     // Convert company to Business format for compatibility
     const business = {
       id: selectedCompany.id,

@@ -1,24 +1,8 @@
-// Database entity types for profiles, companies, and assessments
-
-export interface Profile {
-  id: string;
-  user_id: string;
-  organization_name: string;
-  description?: string;
-  industry?: string;
-  website?: string;
-  contact_email?: string;
-  contact_phone?: string;
-  address?: string;
-  established_year?: number;
-  employees?: number;
-  created_at: string;
-  updated_at: string;
-}
+// Database entity types for companies and assessments
 
 export interface Company {
   id: string;
-  profile_id: string;
+  user_id: string;
   name: string;
   industry: string;
   size: 'micro' | 'small' | 'medium';
@@ -26,14 +10,18 @@ export interface Company {
   employees: number;
   revenue: number;
   established_year: number;
-  registration_number: string;
+  registration_number?: string;
+  description?: string;
+  website?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  address?: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface Assessment {
   id: string;
-  profile_id: string;
   company_id: string;
   frameworks: string[];
   status: 'in_progress' | 'completed' | 'failed';

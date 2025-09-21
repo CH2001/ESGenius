@@ -4,21 +4,19 @@ import { AssessmentPage } from '@/pages/Assessment';
 import { AssessmentComplete } from '@/components/AssessmentComplete';
 import { Results } from '@/pages/Results';
 import { Business, ESGResponse } from '@/types/esg';
-import { Profile, Company, Assessment as DBAssessment } from '@/types/database';
+import { Company, Assessment } from '@/types/database';
 
 export const Index = () => {
   const [currentPage, setCurrentPage] = useState<'dashboard' | 'assessment' | 'complete' | 'results'>('dashboard');
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
-  const [assessment, setAssessment] = useState<DBAssessment | null>(null);
+  const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [assessmentResults, setAssessmentResults] = useState<ESGResponse[]>([]);
 
   const handleStartAssessment = () => {
     setCurrentPage('assessment');
   };
 
-  const handleAssessmentComplete = (data: { profile: Profile; company: Company; assessment: DBAssessment; responses: ESGResponse[] }) => {
-    setProfile(data.profile);
+  const handleAssessmentComplete = (data: { company: Company; assessment: Assessment; responses: ESGResponse[] }) => {
     setCompany(data.company);
     setAssessment(data.assessment);
     setAssessmentResults(data.responses);
@@ -52,7 +50,7 @@ export const Index = () => {
             employees: company.employees,
             revenue: company.revenue,
             establishedYear: company.established_year,
-            registrationNumber: company.registration_number
+            registrationNumber: company.registration_number || ''
           } : null}
           hasCompletedAssessment={!!company}
         />
@@ -65,7 +63,7 @@ export const Index = () => {
         />
       );
     case 'complete':
-      return profile && company && assessment ? (
+      return company && assessment ? (
         <AssessmentComplete
           business={{
             id: company.id,
@@ -76,7 +74,7 @@ export const Index = () => {
             employees: company.employees,
             revenue: company.revenue,
             establishedYear: company.established_year,
-            registrationNumber: company.registration_number
+            registrationNumber: company.registration_number || ''
           }}
           responses={assessmentResults}
           onViewResults={handleViewResults}
@@ -84,9 +82,8 @@ export const Index = () => {
         />
       ) : null;
     case 'results':
-      return profile && company && assessment ? (
+      return company && assessment ? (
         <Results
-          profile={profile}
           company={company}
           assessment={assessment}
           responses={assessmentResults}
