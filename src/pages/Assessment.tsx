@@ -11,7 +11,7 @@ import { Profile, Company, AVAILABLE_FRAMEWORKS } from '@/types/database';
 import type { Assessment } from '@/types/database';
 import { ESGResponse } from '@/types/esg';
 import { NewLambdaService } from '@/services/newLambdaService';
-import { supabase } from '@/integrations/supabase/client';
+import { demoAuth, DemoUser } from '@/services/demoAuthService';
 import { toast } from 'sonner';
 import { mockESGFrameworks } from '@/data/mockESGFrameworks';
 
@@ -27,19 +27,18 @@ export const AssessmentPage: React.FC<NewAssessmentProps> = ({ onComplete, onBac
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedFrameworks, setSelectedFrameworks] = useState<string[]>(['esg-i']);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<DemoUser | null>(null);
 
   useEffect(() => {
-    initializeAuth();
-  }, []);
+    const unsubscribe = demoAuth.onAuthStateChange((user) => {
+      setCurrentUser(user);
+      if (user) {
+        loadProfiles(user.id);
+      }
+    });
 
-  const initializeAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      setCurrentUser(session.user);
-      loadProfiles(session.user.id);
-    }
-  };
+    return unsubscribe;
+  }, []);
 
   const loadProfiles = async (userId: string) => {
     try {

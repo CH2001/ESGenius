@@ -8,13 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { ProfileService } from '@/services/profileService';
 import { Profile, Company } from '@/types/database';
-import { supabase } from '@/integrations/supabase/client';
+import { demoAuth, DemoUser } from '@/services/demoAuthService';
 import { Plus, Building, Edit, Save, X } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [companies, setCompanies] = useState<{ [profileId: string]: Company[] }>({});
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<DemoUser | null>(null);
   const [editingProfile, setEditingProfile] = useState<string | null>(null);
   const [editingCompany, setEditingCompany] = useState<string | null>(null);
   const [showNewProfile, setShowNewProfile] = useState(false);
@@ -23,16 +23,15 @@ export const ProfilePage: React.FC = () => {
   const [newCompany, setNewCompany] = useState<Partial<Company>>({});
 
   useEffect(() => {
-    initializeAuth();
-  }, []);
+    const unsubscribe = demoAuth.onAuthStateChange((user) => {
+      setCurrentUser(user);
+      if (user) {
+        loadProfiles(user.id);
+      }
+    });
 
-  const initializeAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      setCurrentUser(session.user);
-      loadProfiles(session.user.id);
-    }
-  };
+    return unsubscribe;
+  }, []);
 
   const loadProfiles = async (userId: string) => {
     try {
