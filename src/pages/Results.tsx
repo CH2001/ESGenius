@@ -198,6 +198,28 @@ export const Results: React.FC<ResultsProps> = ({
           ))}
         </div>
 
+        {/* Gaps Detected */}
+        {results?.gaps_detected && results.gaps_detected.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Key Gaps Identified</CardTitle>
+              <CardDescription>Areas requiring immediate attention based on your assessment</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {results.gaps_detected.map((gap: string, index: number) => (
+                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-destructive/5 border-l-4 border-destructive">
+                    <div className="mt-0.5">
+                      <div className="w-2 h-2 rounded-full bg-destructive" />
+                    </div>
+                    <p className="text-sm text-foreground flex-1">{gap}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Recommended Actions and Next Steps */}
         <Card>
           <CardHeader>
