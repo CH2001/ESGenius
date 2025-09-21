@@ -69,6 +69,37 @@ export const mockESGFrameworks: ESGFramework[] = [
                 type: 'textarea',
                 required: false,
                 placeholder: 'Describe energy efficiency measures if any'
+              },
+              {
+                id: 'renewable-energy-used',
+                label: 'Use of renewable energy',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'renewable-energy-type',
+                label: 'Type of renewable energy (if yes)',
+                type: 'multiselect',
+                required: false,
+                options: ['Solar', 'Biomass', 'Hydro', 'Wind', 'Other']
+              },
+              {
+                id: 'energy-efficiency-led',
+                label: 'LED lighting implemented',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'energy-efficiency-equipment',
+                label: 'Efficient equipment used',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'energy-audits-conducted',
+                label: 'Energy audits conducted',
+                type: 'boolean',
+                required: true
               }
             ],
             scoringGuideline: 'Score based on energy tracking completeness, renewable usage, and efficiency measures'
@@ -105,6 +136,38 @@ export const mockESGFrameworks: ESGFramework[] = [
               {
                 id: 'recycling-practices',
                 label: 'Active Recycling Practices',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'recycling-paper',
+                label: 'Paper recycling practices',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'recycling-plastics',
+                label: 'Plastics recycling practices',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'recycling-ewaste',
+                label: 'E-waste recycling practices',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'recycling-percentage',
+                label: 'Percentage of waste recycled (if tracked)',
+                type: 'number',
+                required: false,
+                unit: '%',
+                placeholder: 'Enter percentage if tracked'
+              },
+              {
+                id: 'hazardous-waste-handling',
+                label: 'Hazardous waste handling procedures',
                 type: 'boolean',
                 required: true
               },
@@ -148,6 +211,24 @@ export const mockESGFrameworks: ESGFramework[] = [
                 required: true
               },
               {
+                id: 'rainwater-harvesting',
+                label: 'Rainwater harvesting implemented',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'water-recycling',
+                label: 'Water recycling systems',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'water-efficiency-devices',
+                label: 'Water efficiency devices installed',
+                type: 'boolean',
+                required: true
+              },
+              {
                 id: 'conservation-details',
                 label: 'Conservation Measures Details',
                 type: 'textarea',
@@ -156,6 +237,35 @@ export const mockESGFrameworks: ESGFramework[] = [
               }
             ],
             scoringGuideline: 'Score based on water consumption tracking and conservation initiative implementation'
+          },
+          {
+            id: 'environmental-certifications',
+            title: 'Environmental Certifications',
+            description: 'Environmental certifications and standards compliance',
+            weight: 0.1,
+            benchmark: 'Obtain relevant environmental certifications',
+            fields: [
+              {
+                id: 'iso-14001',
+                label: 'ISO 14001 certification',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'green-building-index',
+                label: 'Green Building Index certification',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'other-env-certifications',
+                label: 'Other environmental certifications',
+                type: 'textarea',
+                required: false,
+                placeholder: 'List any other environmental certifications'
+              }
+            ],
+            scoringGuideline: 'Score based on environmental certifications obtained'
           }
         ]
       },
@@ -211,6 +321,18 @@ export const mockESGFrameworks: ESGFramework[] = [
                 required: true,
                 unit: 'incidents',
                 placeholder: 'Enter total workplace accidents, injuries, near-misses'
+              },
+              {
+                id: 'safety-training-conducted',
+                label: 'Safety training conducted',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'accident-incident-tracking',
+                label: 'Accidents/incident tracking system',
+                type: 'boolean',
+                required: true
               }
             ],
             scoringGuideline: 'Score based on wage compliance, benefits provision, and safety record'
@@ -245,6 +367,30 @@ export const mockESGFrameworks: ESGFramework[] = [
                 required: true
               },
               {
+                id: 'fair-employment-policy',
+                label: 'Non-discrimination / fair employment policy',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'pwd-hiring',
+                label: 'Initiatives for hiring persons with disabilities',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'women-empowerment',
+                label: 'Women empowerment initiatives',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'flexible-work',
+                label: 'Flexible work arrangements',
+                type: 'boolean',
+                required: true
+              },
+              {
                 id: 'inclusion-details',
                 label: 'Inclusion Initiatives Details',
                 type: 'textarea',
@@ -253,6 +399,37 @@ export const mockESGFrameworks: ESGFramework[] = [
               }
             ],
             scoringGuideline: 'Score based on gender balance and formal non-discrimination policy implementation'
+          },
+          {
+            id: 'employee-engagement',
+            title: 'Employee Engagement',
+            description: 'Employee training, development and engagement initiatives',
+            weight: 0.3,
+            benchmark: 'Provide adequate training and engagement mechanisms for employees',
+            fields: [
+              {
+                id: 'training-hours-per-employee',
+                label: 'Training hours per employee per year',
+                type: 'number',
+                required: false,
+                unit: 'hours',
+                placeholder: 'Enter average training hours if tracked'
+              },
+              {
+                id: 'grievance-mechanism',
+                label: 'Grievance mechanism in place',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'employee-engagement-details',
+                label: 'Employee engagement initiatives',
+                type: 'textarea',
+                required: false,
+                placeholder: 'Describe employee engagement and development initiatives'
+              }
+            ],
+            scoringGuideline: 'Score based on training provision and employee engagement mechanisms'
           }
         ]
       },
@@ -289,6 +466,24 @@ export const mockESGFrameworks: ESGFramework[] = [
               {
                 id: 'esg-committee-owner',
                 label: 'ESG Committee/Owner Designated',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'whistleblowing-channel',
+                label: 'Whistleblowing channel established',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'esg-board-meetings',
+                label: 'ESG responsibility included in board/management meetings',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'supplier-esg-clauses',
+                label: 'ESG clauses in supplier contracts',
                 type: 'boolean',
                 required: true
               },
@@ -330,6 +525,12 @@ export const mockESGFrameworks: ESGFramework[] = [
                 required: true
               },
               {
+                id: 'supplier-esg-risk-assessment',
+                label: 'Do you assess suppliers for ESG risks?',
+                type: 'boolean',
+                required: true
+              },
+              {
                 id: 'supplier-compliance-rate',
                 label: 'Supplier ESG Compliance Rate',
                 type: 'number',
@@ -356,6 +557,25 @@ export const mockESGFrameworks: ESGFramework[] = [
                 placeholder: 'Enter annual investment amount'
               },
               {
+                id: 'new-sustainable-products',
+                label: 'New products or services with sustainability focus',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'sustainable-products-description',
+                label: 'Describe sustainability-focused products/services',
+                type: 'textarea',
+                required: false,
+                placeholder: 'Briefly describe new sustainable products or services'
+              },
+              {
+                id: 'circular-economy-practices',
+                label: 'Circular economy practices (reuse, repair, recycle)',
+                type: 'boolean',
+                required: true
+              },
+              {
                 id: 'sustainability-focus',
                 label: 'Innovation Has Sustainability Focus',
                 type: 'boolean',
@@ -363,6 +583,103 @@ export const mockESGFrameworks: ESGFramework[] = [
               }
             ],
             scoringGuideline: 'Score based on innovation investment and sustainability focus'
+          },
+          {
+            id: 'sustainable-procurement',
+            title: 'Sustainable Procurement',
+            description: 'Green purchasing policies and sustainable procurement practices',
+            weight: 0.3,
+            benchmark: 'Implement green purchasing policies and sustainable procurement',
+            fields: [
+              {
+                id: 'green-purchasing-policy',
+                label: 'Green purchasing policy in place',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'sustainable-procurement-details',
+                label: 'Sustainable procurement practices',
+                type: 'textarea',
+                required: false,
+                placeholder: 'Describe sustainable procurement initiatives'
+              }
+            ],
+            scoringGuideline: 'Score based on green purchasing policy implementation and sustainable procurement practices'
+          }
+        ]
+      },
+      {
+        id: 'capacity-building',
+        name: 'Capacity Building & Financing',
+        weight: 0.2,
+        criteria: [
+          {
+            id: 'training-participation',
+            title: 'Training & Development',
+            description: 'Participation in ESG workshops and training programs',
+            weight: 0.5,
+            benchmark: 'Regular participation in ESG training and capacity building',
+            fields: [
+              {
+                id: 'esg-workshops-participation',
+                label: 'Participation in ESG workshops/training',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'staff-trained-count',
+                label: 'Number of staff trained in ESG',
+                type: 'number',
+                required: false,
+                unit: 'employees',
+                placeholder: 'Enter number of staff trained'
+              },
+              {
+                id: 'training-details',
+                label: 'Training program details',
+                type: 'textarea',
+                required: false,
+                placeholder: 'Describe ESG training programs attended'
+              }
+            ],
+            scoringGuideline: 'Score based on ESG training participation and staff development'
+          },
+          {
+            id: 'financing-access',
+            title: 'ESG Financing Access',
+            description: 'Access to ESG and green financing opportunities',
+            weight: 0.5,
+            benchmark: 'Access green financing and government incentives for ESG initiatives',
+            fields: [
+              {
+                id: 'esg-green-financing',
+                label: 'Accessed ESG/green financing',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'financing-type',
+                label: 'Type of financing accessed',
+                type: 'multiselect',
+                required: false,
+                options: ['Green loans', 'Sustainability sukuk', 'ESG grants', 'Other']
+              },
+              {
+                id: 'government-incentives',
+                label: 'Applied for government incentives (MyHIJAU, tax rebates)',
+                type: 'boolean',
+                required: true
+              },
+              {
+                id: 'financing-details',
+                label: 'Financing and incentives details',
+                type: 'textarea',
+                required: false,
+                placeholder: 'Describe financing and incentives accessed'
+              }
+            ],
+            scoringGuideline: 'Score based on access to ESG financing and government incentives'
           }
         ]
       }
