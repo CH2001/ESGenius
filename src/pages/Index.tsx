@@ -11,15 +11,17 @@ export const Index = () => {
   const [company, setCompany] = useState<Company | null>(null);
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [assessmentResults, setAssessmentResults] = useState<ESGResponse[]>([]);
+  const [lambdaResults, setLambdaResults] = useState<any>(null);
 
   const handleStartAssessment = () => {
     setCurrentPage('assessment');
   };
 
-  const handleAssessmentComplete = (data: { company: Company; assessment: Assessment; responses: ESGResponse[] }) => {
+  const handleAssessmentComplete = (data: { company: Company; assessment: Assessment; responses: ESGResponse[]; results?: any }) => {
     setCompany(data.company);
     setAssessment(data.assessment);
     setAssessmentResults(data.responses);
+    setLambdaResults(data.results);
     setCurrentPage('complete');
   };
 
@@ -87,6 +89,7 @@ export const Index = () => {
           company={company}
           assessment={assessment}
           responses={assessmentResults}
+          results={lambdaResults}
           onBack={handleBackToDashboard}
           onRetake={handleRetakeAssessment}
         />

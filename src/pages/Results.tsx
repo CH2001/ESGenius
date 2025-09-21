@@ -21,6 +21,7 @@ interface ResultsProps {
   company: Company;
   assessment: Assessment;
   responses: ESGResponse[];
+  results?: any; // Lambda results
   onBack: () => void;
   onRetake: () => void;
 }
@@ -29,51 +30,47 @@ export const Results: React.FC<ResultsProps> = ({
   company,
   assessment,
   responses,
+  results,
   onBack,
   onRetake
 }) => {
-  // Mock data for demonstration
-  const overallScore = 72;
-  const complianceLevel = 'Progressing';
+  // Extract data from Lambda results or use defaults
+  const framework = results?.framework || 'ESG Assessment';
+  const report = results?.report || {};
+  const readinessStage = report.header?.readiness_stage || 'Unknown';
+  const executiveSummary = report.executive_summary || '';
   
+  // Calculate scores from baseline checklist
+  const calculateCategoryScore = (categoryData: any) => {
+    if (!categoryData) return 0;
+    const items = Object.values(categoryData);
+    const yesCount = items.filter((item: any) => item === 'Yes').length;
+    return Math.round((yesCount / items.length) * 100);
+  };
+
+  const baseline = results?.baseline_checklist || {};
   const categoryScores = [
-    { category: 'Environmental', score: 75, maxScore: 100 },
-    { category: 'Social', score: 68, maxScore: 100 },
-    { category: 'Governance', score: 73, maxScore: 100 }
+    { category: 'Environmental', score: calculateCategoryScore(baseline.Environmental), maxScore: 100 },
+    { category: 'Social', score: calculateCategoryScore(baseline.Social), maxScore: 100 },
+    { category: 'Governance', score: calculateCategoryScore(baseline.Governance), maxScore: 100 },
+    { category: 'Operational Excellence', score: calculateCategoryScore(baseline['Operational Excellence']), maxScore: 100 }
   ];
 
-  const recommendations = [
-    {
-      id: 'env-1',
-      category: 'Environmental',
-      title: 'Implement Energy Management System',
-      description: 'Establish ISO 50001 certified energy management to reduce carbon footprint',
-      priority: 'high' as const,
-      impact: 'Potential 15-20% reduction in energy costs',
-      timeframe: '3-6 months',
-      funding: 'Green Technology Financing Scheme (GTFS) up to RM 100 million'
-    },
-    {
-      id: 'soc-1',
-      category: 'Social',
-      title: 'Enhance Employee Well-being Programs',
-      description: 'Develop comprehensive wellness initiatives and diversity programs',
-      priority: 'medium' as const,
-      impact: 'Improved employee retention and productivity',
-      timeframe: '2-4 months',
-      funding: 'HRD Corp training grants available'
-    },
-    {
-      id: 'gov-1',
-      category: 'Governance',
-      title: 'Strengthen Supply Chain Monitoring',
-      description: 'Implement supplier ESG assessment and monitoring systems',
-      priority: 'high' as const,
-      impact: 'Enhanced risk management and compliance',
-      timeframe: '4-8 months',
-      funding: 'SME Digitalization Grant up to RM 50,000'
-    }
-  ];
+  // Calculate overall score
+  const overallScore = Math.round(categoryScores.reduce((sum, cat) => sum + cat.score, 0) / categoryScores.length);
+  const complianceLevel = overallScore >= 75 ? 'Financing-Ready' : overallScore >= 50 ? 'Progressing' : 'Needs Foundation';
+
+  // Convert Lambda prioritized improvements to recommendations
+  const recommendations = (report.prioritized_improvements || []).map((improvement: any, index: number) => ({
+    id: `rec-${index}`,
+    category: 'Action Item',
+    title: improvement.action,
+    description: `Owner: ${improvement.owner}`,
+    priority: 'high' as const,
+    impact: improvement.expected_benefit,
+    timeframe: improvement.timeline,
+    funding: improvement.evidence_required ? `Evidence required: ${improvement.evidence_required}` : 'N/A'
+  }));
 
   return (
     <div className="min-h-screen bg-background">
@@ -118,50 +115,71 @@ export const Results: React.FC<ResultsProps> = ({
           </CardHeader>
         </Card>
 
-        {/* Overall Score */}
+        {/* Framework and Score Overview */}
         <Card className="gradient-card">
           <CardContent className="p-8">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-primary">Overall ESG Score</h3>
-                <div className="space-y-2">
-                  <div className="flex items-baseline gap-4">
-                    <span className="text-4xl font-bold text-foreground">{overallScore}</span>
-                    <span className="text-lg text-muted-foreground">/ 100</span>
+            <div className="space-y-6">
+              {/* Framework Info */}
+              <div className="text-center space-y-2">
+                <Badge variant="outline" className="text-sm px-4 py-1">
+                  {framework}
+                </Badge>
+                <h3 className="text-2xl font-bold text-primary">ESG Assessment Results</h3>
+                <p className="text-muted-foreground">Readiness Stage: <strong>{readinessStage}</strong></p>
+              </div>
+              
+              {/* Overall Score */}
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-baseline gap-4 justify-center md:justify-start">
+                      <span className="text-4xl font-bold text-foreground">{overallScore}</span>
+                      <span className="text-lg text-muted-foreground">/ 100</span>
+                    </div>
+                    <div className="flex justify-center md:justify-start">
+                      <Badge variant={overallScore >= 75 ? 'default' : overallScore >= 50 ? 'secondary' : 'destructive'}>
+                        {complianceLevel}
+                      </Badge>
+                    </div>
                   </div>
-                  <Badge variant={overallScore >= 75 ? 'default' : overallScore >= 50 ? 'secondary' : 'destructive'}>
-                    {complianceLevel}
-                  </Badge>
+                  <div className="space-y-2">
+                    <Progress value={overallScore} className="h-3" />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Needs Foundation (0-49)</span>
+                      <span>Progressing (50-74)</span>
+                      <span>Financing-Ready (75+)</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Progress value={overallScore} className="h-3" />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Needs Foundation (0-49)</span>
-                    <span>Progressing (50-74)</span>
-                    <span>Financing-Ready (75+)</span>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Award className="h-4 w-4 text-primary" />
+                    <span>Ready for ESG certification programs</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <TrendingUp className="h-4 w-4 text-success" />
+                    <span>Eligible for green financing opportunities</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <FileCheck className="h-4 w-4 text-secondary" />
+                    <span>Compliant with basic regulatory requirements</span>
                   </div>
                 </div>
               </div>
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <Award className="h-4 w-4 text-primary" />
-                  <span>Ready for ESG certification programs</span>
+
+              {/* Executive Summary */}
+              {executiveSummary && (
+                <div className="pt-4 border-t">
+                  <h4 className="font-semibold mb-2">Executive Summary</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{executiveSummary}</p>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <TrendingUp className="h-4 w-4 text-success" />
-                  <span>Eligible for green financing opportunities</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <FileCheck className="h-4 w-4 text-secondary" />
-                  <span>Compliant with basic regulatory requirements</span>
-                </div>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
 
         {/* Category Breakdown */}
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {categoryScores.map((category, index) => (
             <Card key={index}>
               <CardHeader className="pb-3">
@@ -180,33 +198,48 @@ export const Results: React.FC<ResultsProps> = ({
           ))}
         </div>
 
-        {/* Recommendations */}
+        {/* Recommended Actions and Next Steps */}
         <Card>
           <CardHeader>
-            <CardTitle>ESG Recommendations</CardTitle>
-            <CardDescription>Priority actions to improve your ESG performance</CardDescription>
+            <CardTitle>Recommended Actions & Next Steps</CardTitle>
+            <CardDescription>Priority actions based on your assessment results</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recommendations.map((rec) => (
-              <Card key={rec.id} className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-semibold">{rec.title}</h4>
-                  <Badge variant={rec.priority === 'high' ? 'destructive' : 'secondary'}>
-                    {rec.priority} priority
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground mb-2">{rec.description}</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                  <div><strong>Impact:</strong> {rec.impact}</div>
-                  <div><strong>Timeframe:</strong> {rec.timeframe}</div>
-                  <div className="md:col-span-2"><strong>Funding:</strong> {rec.funding}</div>
-                </div>
-              </Card>
-            ))}
+            {recommendations.length > 0 ? (
+              recommendations.map((rec) => (
+                <Card key={rec.id} className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-semibold">{rec.title}</h4>
+                    <Badge variant="destructive">
+                      High Priority
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">{rec.description}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div className="space-y-1">
+                      <strong className="text-primary">Expected Benefit:</strong>
+                      <p className="text-muted-foreground">{rec.impact}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <strong className="text-primary">Timeline:</strong>
+                      <p className="text-muted-foreground">{rec.timeframe}</p>
+                    </div>
+                    <div className="md:col-span-2 space-y-1">
+                      <strong className="text-primary">Requirements:</strong>
+                      <p className="text-muted-foreground">{rec.funding}</p>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No specific recommendations available. Your ESG performance is on track!</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Framework Details */}
+        {/* Assessment Details */}
         <Card>
           <CardHeader>
             <CardTitle>Assessment Details</CardTitle>
@@ -216,7 +249,7 @@ export const Results: React.FC<ResultsProps> = ({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4 text-sm">
-              <div><strong>Frameworks Assessed:</strong> {assessment.frameworks.join(', ')}</div>
+              <div><strong>Framework Used:</strong> {framework}</div>
               <div><strong>Questions Answered:</strong> {responses.length}</div>
               <div><strong>Assessment Date:</strong> {new Date(assessment.created_at).toLocaleDateString()}</div>
               <div><strong>Status:</strong> {assessment.status}</div>
