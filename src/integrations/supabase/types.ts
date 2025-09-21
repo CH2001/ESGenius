@@ -14,7 +14,190 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      assessment_results: {
+        Row: {
+          assessment_id: string
+          created_at: string
+          error_message: string | null
+          framework: string
+          id: string
+          lambda_request: Json
+          lambda_response: Json | null
+          success: boolean
+        }
+        Insert: {
+          assessment_id: string
+          created_at?: string
+          error_message?: string | null
+          framework: string
+          id?: string
+          lambda_request: Json
+          lambda_response?: Json | null
+          success?: boolean
+        }
+        Update: {
+          assessment_id?: string
+          created_at?: string
+          error_message?: string | null
+          framework?: string
+          id?: string
+          lambda_request?: Json
+          lambda_response?: Json | null
+          success?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_results_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessments: {
+        Row: {
+          company_id: string
+          created_at: string
+          frameworks: string[]
+          id: string
+          profile_id: string
+          responses: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          frameworks: string[]
+          id?: string
+          profile_id: string
+          responses?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          frameworks?: string[]
+          id?: string
+          profile_id?: string
+          responses?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          created_at: string
+          employees: number
+          established_year: number
+          id: string
+          industry: string
+          location: string
+          name: string
+          profile_id: string
+          registration_number: string
+          revenue: number
+          size: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          employees: number
+          established_year: number
+          id?: string
+          industry: string
+          location: string
+          name: string
+          profile_id: string
+          registration_number: string
+          revenue: number
+          size: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          employees?: number
+          established_year?: number
+          id?: string
+          industry?: string
+          location?: string
+          name?: string
+          profile_id?: string
+          registration_number?: string
+          revenue?: number
+          size?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companies_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          description: string | null
+          id: string
+          industry: string | null
+          organization_name: string
+          updated_at: string
+          user_id: string | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          organization_name: string
+          updated_at?: string
+          user_id?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          organization_name?: string
+          updated_at?: string
+          user_id?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
