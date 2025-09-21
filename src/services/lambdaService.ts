@@ -99,8 +99,18 @@ class LambdaService {
 
   // Submit ESG assessment to AWS Lambda
   async submitESGAssessment(data: LambdaESGRequest): Promise<LambdaResponse> {
+    console.log('🚀 ESG Assessment Submission Started');
+    console.log('📊 Assessment Data:', {
+      businessName: data.business.name,
+      framework: data.framework,
+      responseCount: data.responses.length,
+      dataSize: JSON.stringify(data).length + ' bytes'
+    });
+
     try {
       const config = this.getConfig();
+      console.log('✅ Lambda endpoint configured:', config.endpoint);
+      console.log('🔑 AWS credentials configured:', !!config.credentials);
       
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -111,29 +121,55 @@ class LambdaService {
         headers['X-AWS-Access-Key-Id'] = config.credentials.accessKeyId;
         headers['X-AWS-Secret-Access-Key'] = config.credentials.secretAccessKey;
         headers['X-AWS-Region'] = config.credentials.region;
+        console.log('🔐 AWS headers added to request');
       }
 
+      const requestPayload = {
+        action: 'analyze_esg',
+        data
+      };
+
+      console.log('📡 Sending request to Lambda:', config.endpoint);
+      console.log('📦 Request payload size:', JSON.stringify(requestPayload).length + ' bytes');
+      
       const response = await fetch(config.endpoint, {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          action: 'analyze_esg',
-          data
-        })
+        body: JSON.stringify(requestPayload)
+      });
+
+      console.log('📨 Lambda response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
       });
 
       if (!response.ok) {
-        throw new Error(`Lambda request failed: ${response.statusText}`);
+        throw new Error(`Lambda request failed: ${response.status} ${response.statusText}`);
       }
 
       const result = await response.json();
+      console.log('✅ Lambda processing successful:', {
+        hasScoring: !!result.scoring,
+        hasOpportunities: !!result.opportunities,
+        processingTime: result.processingTime + 's'
+      });
+      
       return result;
 
     } catch (error) {
-      console.error('Lambda service error:', error);
+      console.error('❌ Lambda service error:', error);
+      console.warn('🔄 Falling back to mock data');
       
       // Return mock data for development
-      return this.getMockResponse(data);
+      const mockResponse = this.getMockResponse(data);
+      console.log('🎭 Mock response generated:', {
+        overallScore: mockResponse.scoring.overallScore,
+        recommendationCount: mockResponse.scoring.recommendations.length,
+        opportunityCount: mockResponse.opportunities.length
+      });
+      
+      return mockResponse;
     }
   }
 
