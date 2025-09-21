@@ -12,6 +12,7 @@ import type { Assessment } from '@/types/database';
 import { ESGResponse } from '@/types/esg';
 import { NewLambdaService } from '@/services/newLambdaService';
 import { demoAuth, DemoUser, mockCompany } from '@/services/demoAuthService';
+// Force reload - removed mockProfile reference
 import { toast } from 'sonner';
 import { mockESGFrameworks } from '@/data/mockESGFrameworks';
 
