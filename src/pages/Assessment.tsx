@@ -12,6 +12,7 @@ import type { Assessment } from '@/types/database';
 import { ESGResponse } from '@/types/esg';
 import { NewLambdaService } from '@/services/newLambdaService';
 import { demoAuth, DemoUser, mockCompany } from '@/services/demoAuthService';
+import { supabase } from '@/integrations/supabase/client';
 // Force reload - removed mockProfile reference
 import { toast } from 'sonner';
 import { mockESGFrameworks } from '@/data/mockESGFrameworks';
@@ -29,10 +30,26 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
   const [currentUser, setCurrentUser] = useState<DemoUser | null>(null);
 
   useEffect(() => {
+    // Ensure Supabase auth is initialized
+    const initAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        // Sign in anonymously for demo purposes
+        const { data, error } = await supabase.auth.signInAnonymously();
+        if (error) {
+          console.error('Auth error:', error);
+        } else {
+          console.log('Anonymous auth successful:', data.user?.id);
+        }
+      } else {
+        console.log('User already authenticated:', user.id);
+      }
+    };
+    
     const unsubscribe = demoAuth.onAuthStateChange((user) => {
       setCurrentUser(user);
       if (user) {
-        loadCompanies();
+        initAuth().then(() => loadCompanies());
       } else {
         onBack();
       }
@@ -41,9 +58,39 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
     return unsubscribe;
   }, []);
 
-  const loadCompanies = () => {
-    // Use demo data instead of trying to fetch from database
-    setCompanies([mockCompany as Company]);
+  const loadCompanies = async () => {
+    if (currentUser) {
+      try {
+        // Try to get companies from database first
+        const companies = await CompanyService.getCompaniesByUser(currentUser.id);
+        if (companies.length > 0) {
+          setCompanies(companies);
+        } else {
+          // Create demo company with proper Supabase user ID
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const demoCompanyData = {
+              ...mockCompany,
+              user_id: user.id // Use actual Supabase user ID
+            };
+            delete (demoCompanyData as any).id; // Remove id so it gets auto-generated
+            delete (demoCompanyData as any).created_at;
+            delete (demoCompanyData as any).updated_at;
+            
+            const createdCompany = await CompanyService.createCompany(demoCompanyData);
+            if (createdCompany) {
+              setCompanies([createdCompany]);
+            }
+          } else {
+            // Fallback to mock data if no auth user
+            setCompanies([mockCompany as Company]);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading companies:', error);
+        setCompanies([mockCompany as Company]);
+      }
+    }
   };
 
   const handleCompanySelect = (companyId: string) => {
@@ -75,6 +122,13 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
     if (!selectedCompany) return;
 
     try {
+      console.log('Starting ESG completion with company:', selectedCompany);
+      console.log('Selected frameworks:', selectedFrameworks);
+      
+      // Verify Supabase auth before creating assessment
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current Supabase user:', user?.id);
+      
       // Create assessment record
       const assessment = await CompanyService.createAssessment({
         company_id: selectedCompany.id,
@@ -100,7 +154,7 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
       }
     } catch (error) {
       console.error('Error completing assessment:', error);
-      toast.error('Failed to complete assessment');
+      toast.error('Failed to complete assessment: ' + (error as any)?.message);
     }
   };
 
