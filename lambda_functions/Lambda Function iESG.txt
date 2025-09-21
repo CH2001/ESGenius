@@ -1,0 +1,469 @@
+import json
+import os
+import re
+from datetime import date
+from typing import Any, Dict, Tuple, List
+
+import boto3
+
+# ---------- AWS clients ----------
+bedrock_client = boto3.client("bedrock-runtime")
+kb_client = boto3.client("bedrock-agent-runtime")
+
+MODEL_ID = os.environ.get("MODEL_ID", "us.anthropic.claude-sonnet-4-20250514-v1:0")
+KB_ID_IESG = os.environ.get("KB_ID_IESG", "FCZJCL8Q1W")
+
+# ---------- CORS / HTTP helpers ----------
+def _cors_headers(origin: str | None):
+    return {
+        "Access-Control-Allow-Origin": origin or "*",   # lock to your domain in prod
+        "Access-Control-Allow-Methods": "POST,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization",
+        "Vary": "Origin",
+    }
+
+def _resp(status: int, body, origin: str | None = None):
+    return {
+        "statusCode": status,
+        "headers": {"Content-Type": "application/json", **_cors_headers(origin)},
+        "body": body if isinstance(body, str) else json.dumps(body, default=str),
+    }
+
+def _parse_http_event(event) -> Tuple[str, str | None, Dict[str, Any]]:
+    headers = event.get("headers") or {}
+    origin = headers.get("origin") or headers.get("Origin")
+    method = (event.get("requestContext", {}).get("http", {}) or {}).get("method", "POST")
+    raw = event.get("body") or ""
+    if event.get("isBase64Encoded"):
+        import base64
+        raw = base64.b64decode(raw).decode("utf-8", errors="ignore")
+    data = {}
+    if raw.strip():
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError:
+            data = {}
+    return method, origin, data
+
+# ---------- Coercion helpers ----------
+def _as_bool(v, default=None):
+    if isinstance(v, bool): return v
+    if isinstance(v, (int, float)): return bool(v)
+    if isinstance(v, str):
+        s = v.strip().lower()
+        if s in ("true","yes","y","1"): return True
+        if s in ("false","no","n","0"): return False
+    return default
+
+def _as_str(v, default=None):
+    if v is None: return default
+    return str(v).strip()
+
+def _as_float(v, default=None):
+    if v is None or (isinstance(v, str) and not v.strip()): return default
+    try:
+        return float(v)
+    except Exception:
+        return default
+
+def _as_int(v, default=None):
+    f = _as_float(v, None)
+    if f is None: return default
+    return int(round(f))
+
+def _clamp_pct(v):
+    if v is None: return None
+    return max(0, min(100, v))
+
+def _one_of(value, allowed: List[str], default=None):
+    s = _as_str(value, None)
+    if s is None: return default
+    s_low = s.lower()
+    for a in allowed:
+        if s_low == a.lower(): return a
+    return default
+
+# ---------- Normalizer (matches i-ESG sections) ----------
+def normalize_iesg_payload(payload: Dict[str, Any]) -> Tuple[Dict[str, Any], List[str]]:
+    errors: List[str] = []
+
+    env = payload.get("environmental") or {}
+    soc = payload.get("social") or {}
+    gov = payload.get("governance") or {}
+    opx = payload.get("operational_excellence") or {}
+    cap = payload.get("capacity_financing") or {}
+
+    environmental = {
+        "energy": {
+            "monthly_electricity_kwh": _as_float(env.get("energy", {}).get("monthly_electricity_kwh")),
+            "monthly_electricity_spend_rm": _as_float(env.get("energy", {}).get("monthly_electricity_spend_rm")),
+            "renewable_used": _as_bool(env.get("energy", {}).get("renewable_used")),
+            "renewable_types": [str(t).strip() for t in (env.get("energy", {}).get("renewable_types") or []) if str(t).strip()],
+            "efficiency_measures": [str(m).strip() for m in (env.get("energy", {}).get("efficiency_measures") or []) if str(m).strip()],
+        },
+        "waste": {
+            "recycling_practices": [str(r).strip() for r in (env.get("waste", {}).get("recycling_practices") or []) if str(r).strip()],
+            "recycling_rate_pct": _clamp_pct(_as_int(env.get("waste", {}).get("recycling_rate_pct"))),
+            "hazardous_waste_handling": _as_bool(env.get("waste", {}).get("hazardous_waste_handling")),
+        },
+        "water": {
+            "water_saving_measures": [str(w).strip() for w in (env.get("water", {}).get("water_saving_measures") or []) if str(w).strip()],
+        },
+        "general": {
+            "environmental_certifications": [str(c).strip() for c in (env.get("general", {}).get("environmental_certifications") or []) if str(c).strip()],
+        }
+    }
+
+    social = {
+        "compliance": {
+            "minimum_wage_compliance": _as_bool(soc.get("compliance", {}).get("minimum_wage_compliance")),
+            "statutory_contributions_paid": _as_bool(soc.get("compliance", {}).get("statutory_contributions_paid")),
+        },
+        "health_safety": {
+            "safety_training_conducted": _as_bool(soc.get("health_safety", {}).get("safety_training_conducted")),
+            "safety_training_frequency": _one_of(
+                soc.get("health_safety", {}).get("safety_training_frequency"),
+                ["Monthly","Quarterly","Yearly","Ad-hoc"]
+            ),
+            "incident_tracking": _as_bool(soc.get("health_safety", {}).get("incident_tracking")),
+        },
+        "diversity_inclusion": {
+            "non_discrimination_policy": _as_bool(soc.get("diversity_inclusion", {}).get("non_discrimination_policy")),
+            "inclusion_initiatives": [str(i).strip() for i in (soc.get("diversity_inclusion", {}).get("inclusion_initiatives") or []) if str(i).strip()],
+        },
+        "employee_engagement": {
+            "training_hours_per_employee": _as_float(soc.get("employee_engagement", {}).get("training_hours_per_employee")),
+            "grievance_mechanism": _as_bool(soc.get("employee_engagement", {}).get("grievance_mechanism")),
+        }
+    }
+
+    governance = {
+        "policies": {
+            "code_of_ethics": _as_bool(gov.get("policies", {}).get("code_of_ethics")),
+            "anti_corruption_policy": _as_bool(gov.get("policies", {}).get("anti_corruption_policy")),
+            "whistleblowing_channel": _as_bool(gov.get("policies", {}).get("whistleblowing_channel")),
+        },
+        "management_oversight": {
+            "assigned_esg_owner": _as_str(gov.get("management_oversight", {}).get("assigned_esg_owner")),
+            "esg_in_mgmt_meetings": _as_bool(gov.get("management_oversight", {}).get("esg_in_mgmt_meetings")),
+        },
+        "supply_chain": {
+            "supplier_esg_policy": _as_bool(gov.get("supply_chain", {}).get("supplier_esg_policy")),
+            "esg_clauses_in_contracts": _as_bool(gov.get("supply_chain", {}).get("esg_clauses_in_contracts")),
+        }
+    }
+
+    operational_excellence = {
+        "supplier_assessments": {
+            "assess_suppliers_for_esg": _as_bool(opx.get("supplier_assessments", {}).get("assess_suppliers_for_esg")),
+            "supplier_compliance_rate_pct": _clamp_pct(_as_int(opx.get("supplier_assessments", {}).get("supplier_compliance_rate_pct"))),
+        },
+        "sustainable_innovation": {
+            "has_sustainable_products_or_processes": _as_bool(opx.get("sustainable_innovation", {}).get("has_sustainable_products_or_processes")),
+            "description": _as_str(opx.get("sustainable_innovation", {}).get("description")),
+            "circular_practices": [str(c).strip() for c in (opx.get("sustainable_innovation", {}).get("circular_practices") or []) if str(c).strip()],
+        },
+        "sustainable_procurement": {
+            "green_purchasing_policy": _as_bool(opx.get("sustainable_procurement", {}).get("green_purchasing_policy")),
+        }
+    }
+
+    capacity_financing = {
+        "training": {
+            "participated_in_esg_training": _as_bool(cap.get("training", {}).get("participated_in_esg_training")),
+            "number_of_staff_trained": _as_int(cap.get("training", {}).get("number_of_staff_trained")),
+        },
+        "financing": {
+            "accessed_green_financing": _as_bool(cap.get("financing", {}).get("accessed_green_financing")),
+            "applied_government_incentives": [str(g).strip() for g in (cap.get("financing", {}).get("applied_government_incentives") or []) if str(g).strip()],
+        }
+    }
+
+    # Light validation
+    rate = operational_excellence["supplier_assessments"]["supplier_compliance_rate_pct"]
+    if rate is not None and not (0 <= rate <= 100):
+        errors.append("supplier_compliance_rate_pct must be between 0 and 100.")
+
+    normalized = {
+        "environmental": environmental,
+        "social": social,
+        "governance": governance,
+        "operational_excellence": operational_excellence,
+        "capacity_financing": capacity_financing,
+    }
+    return normalized, errors
+
+# ---------- Derive a simple baseline checklist (Yes/No/Partial) ----------
+def _ynp(flag: Any, partial: bool = False) -> str:
+    if flag is True: return "Yes"
+    if flag is False: return "No"
+    return "Partial" if partial else "Unknown"
+
+def derive_baseline(normalized: Dict[str, Any]) -> Dict[str, Dict[str, str]]:
+    e = normalized["environmental"]
+    s = normalized["social"]
+    g = normalized["governance"]
+    o = normalized["operational_excellence"]
+
+    baseline = {
+        "Environmental": {
+            "Tracks energy usage": _ynp(
+                e["energy"]["monthly_electricity_kwh"] is not None
+                or e["energy"]["monthly_electricity_spend_rm"] is not None
+            ),
+            "Uses renewable energy": _ynp(e["energy"]["renewable_used"]),
+            "Has efficiency measures": _ynp(bool(e["energy"]["efficiency_measures"])),
+            "Has recycling program": _ynp(bool(e["waste"]["recycling_practices"])),
+            "Handles hazardous waste": _ynp(e["waste"]["hazardous_waste_handling"]),
+            "Water-saving measures": _ynp(bool(e["water"]["water_saving_measures"])),
+            "Env. certifications": _ynp(bool(e["general"]["environmental_certifications"])),
+        },
+        "Social": {
+            "Min. wage compliant": _ynp(s["compliance"]["minimum_wage_compliance"]),
+            "Statutory contrib. paid": _ynp(s["compliance"]["statutory_contributions_paid"]),
+            "Safety training conducted": _ynp(s["health_safety"]["safety_training_conducted"]),
+            "Incident tracking": _ynp(s["health_safety"]["incident_tracking"]),
+            "Non-discrimination policy": _ynp(s["diversity_inclusion"]["non_discrimination_policy"]),
+            "Grievance mechanism": _ynp(s["employee_engagement"]["grievance_mechanism"]),
+        },
+        "Governance": {
+            "Code of ethics": _ynp(g["policies"]["code_of_ethics"]),
+            "Anti-corruption policy": _ynp(g["policies"]["anti_corruption_policy"]),
+            "Whistleblowing channel": _ynp(g["policies"]["whistleblowing_channel"]),
+            "ESG owner assigned": _ynp(bool(g["management_oversight"]["assigned_esg_owner"])),
+            "ESG in mgmt meetings": _ynp(g["management_oversight"]["esg_in_mgmt_meetings"]),
+            "Supplier ESG policy": _ynp(g["supply_chain"]["supplier_esg_policy"]),
+            "ESG clauses in contracts": _ynp(g["supply_chain"]["esg_clauses_in_contracts"]),
+        },
+        "Operational Excellence": {
+            "Supplier ESG assessments": _ynp(o["supplier_assessments"]["assess_suppliers_for_esg"]),
+            "Supplier compliance rate provided": _ynp(o["supplier_assessments"]["supplier_compliance_rate_pct"] is not None),
+            "Sustainable products/processes": _ynp(o["sustainable_innovation"]["has_sustainable_products_or_processes"]),
+            "Circular practices": _ynp(bool(o["sustainable_innovation"]["circular_practices"])),
+            "Green purchasing policy": _ynp(o["sustainable_procurement"]["green_purchasing_policy"]),
+        }
+    }
+    return baseline
+
+# ---------- Detect gaps (simple heuristics, no scores) ----------
+def detect_gaps(normalized: Dict[str, Any]) -> List[str]:
+    gaps = []
+    e = normalized["environmental"]
+    s = normalized["social"]
+    g = normalized["governance"]
+    o = normalized["operational_excellence"]
+
+    if not (e["energy"]["monthly_electricity_kwh"] or e["energy"]["monthly_electricity_spend_rm"]):
+        gaps.append("Energy usage tracking is missing.")
+    if e["energy"]["renewable_used"] is not True and not e["energy"]["efficiency_measures"]:
+        gaps.append("No renewables or efficiency measures identified.")
+    if not e["waste"]["recycling_practices"]:
+        gaps.append("No recycling program reported.")
+    if s["health_safety"]["safety_training_conducted"] is not True:
+        gaps.append("Safety training not conducted or not reported.")
+    if s["compliance"]["minimum_wage_compliance"] is not True or s["compliance"]["statutory_contributions_paid"] is not True:
+        gaps.append("Labor compliance (minimum wage/statutory) not confirmed.")
+    if g["policies"]["anti_corruption_policy"] is not True:
+        gaps.append("Anti-corruption policy not in place or not reported.")
+    if o["supplier_assessments"]["assess_suppliers_for_esg"] is not True:
+        gaps.append("Supplier ESG assessments not implemented.")
+    return gaps
+
+# ---------- RAG (KB retrieve) ----------
+def retrieve_kb_context(query: str, kb_id: str = KB_ID_IESG, top_k: int = 10) -> str:
+    try:
+        resp = kb_client.retrieve(
+            knowledgeBaseId=kb_id,
+            retrievalQuery={"text": query},
+            retrievalConfiguration={"vectorSearchConfiguration": {"numberOfResults": top_k}}
+        )
+        docs = []
+        for item in resp.get("retrievalResults", []):
+            text = (((item.get("content") or {}).get("text")) or "").strip()
+            if text:
+                docs.append(text)
+        return "\n\n---\n\n".join(docs[:top_k]) if docs else "(no KB passages found)"
+    except Exception as e:
+        return f"(KB retrieval unavailable: {e})"
+
+# ---------- LLM JSON extraction helper ----------
+def _extract_json(s: str) -> dict | None:
+    """Try direct json, else extract the first {...} block."""
+    try:
+        return json.loads(s)
+    except Exception:
+        pass
+    m = re.search(r'\{.*\}', s, flags=re.DOTALL)
+    if not m:
+        return None
+    try:
+        return json.loads(m.group(0))
+    except Exception:
+        return None
+
+# ---------- LLM: create qualitative i-ESG assessment (JSON, no scores) ----------
+def generate_llm_assessment(normalized: Dict[str, Any],
+                            baseline: Dict[str, Dict[str, str]],
+                            gaps: List[str],
+                            kb_context: str,
+                            company_name: str | None = None) -> Dict[str, Any]:
+    concise_company_view = {
+        "Environmental": normalized["environmental"],
+        "Social": normalized["social"],
+        "Governance": normalized["governance"],
+        "OperationalExcellence": normalized["operational_excellence"],
+        "CapacityFinancing": normalized["capacity_financing"],
+    }
+
+    today_str = date.today().isoformat()
+    company_name = company_name or "SME Company"
+
+    schema_hint = """
+{
+  "header": {
+    "company_name": "SME Company",
+    "assessment_date": "YYYY-MM-DD",
+    "prepared_by": "ESG Assistant v1",
+    "framework": "i-ESG (qualitative)",
+    "readiness_stage": "Beginner" | "Developing" | "Mature"
+  },
+  "executive_summary": "≤120 words…",
+  "baseline_checklist": {
+    "Environmental": [{"label":"...", "status":"Yes|No|Partial", "note":"..."}],
+    "Social": [{"label":"...", "status":"Yes|No|Partial"}],
+    "Governance": [{"label":"...", "status":"Yes|No|Partial"}],
+    "Operational Excellence": [{"label":"...", "status":"Yes|No|Partial"}]
+  },
+  "gaps_and_risks": [
+    {"gap":"...", "why_it_matters":"...", "urgency":"High|Medium|Low"}
+  ],
+  "prioritized_improvements": [
+    {
+      "action":"...", "owner":"...",
+      "timeline":"0–3 months|3–6 months|6–12 months",
+      "expected_benefit":"...",
+      "evidence_required":"..."
+    },
+    { ... }, { ... }
+  ],
+  "financing_and_incentives": [
+    {
+      "program_name":"...", "type":"Grant|Loan|Tax",
+      "eligibility_hint":"...",
+      "next_step_link":"...",
+      "documents_needed":["...","..."]
+    }
+  ]
+}
+""".strip()
+
+    prompt = f"""
+You are an ESG assessment assistant for Malaysian SMEs.
+Framework: i-ESG (qualitative only, no numeric scores).
+
+Return ONLY valid JSON following this exact structure (no extra text). Ensure it is parseable:
+{schema_hint}
+
+Rules:
+- Executive summary ≤120 words.
+- Provide 5–7 checklist items per pillar (Environmental, Social, Governance, Operational Excellence). Each item needs "label" + "status". Add "note" only when useful.
+- Include exactly 3 prioritized_improvements.
+- Include "financing_and_incentives" ONLY if there are at least some "Yes" items in both Environmental and Governance pillars.
+- Do NOT include any numeric scores or grades.
+- Keep the tone concise and practical.
+
+Populate with:
+- Header.company_name: "{company_name}"
+- Header.assessment_date: "{today_str}"
+
+Context you can use:
+- Company data (normalized):
+{json.dumps(concise_company_view, indent=2)}
+- Baseline checklist (derived):
+{json.dumps(baseline, indent=2)}
+- Detected gaps:
+{json.dumps(gaps, indent=2)}
+- KB excerpts:
+{kb_context}
+"""
+
+    try:
+        resp = bedrock_client.invoke_model(
+            modelId=MODEL_ID,
+            body=json.dumps({
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 1200,
+                "temperature": 0.2,
+                "messages": [{"role": "user", "content": prompt}]
+            })
+        )
+        data = json.loads(resp["body"].read())
+        raw = data["content"][0]["text"]
+        parsed = _extract_json(raw)
+        if not parsed:
+            # Fallback payload if JSON can't be parsed
+            return {
+                "header": {
+                    "company_name": company_name,
+                    "assessment_date": today_str,
+                    "prepared_by": "ESG Assistant v1",
+                    "framework": "i-ESG (qualitative)",
+                    "readiness_stage": "Developing"
+                },
+                "executive_summary": "(LLM JSON parse failed; baseline-only summary returned.)",
+                "baseline_checklist": baseline,
+                "gaps_and_risks": [{"gap": g, "why_it_matters": "Operational/compliance exposure.", "urgency": "Medium"} for g in gaps[:4]],
+                "prioritized_improvements": [],
+                "financing_and_incentives": []
+            }
+        return parsed
+    except Exception as e:
+        # Full fallback – still deliver something useful
+        return {
+            "header": {
+                "company_name": company_name,
+                "assessment_date": today_str,
+                "prepared_by": "ESG Assistant v1",
+                "framework": "i-ESG (qualitative)",
+                "readiness_stage": "Developing"
+            },
+            "executive_summary": f"(LLM generation unavailable: {e})",
+            "baseline_checklist": baseline,
+            "gaps_and_risks": [{"gap": g, "why_it_matters": "Operational/compliance exposure.", "urgency": "Medium"} for g in gaps[:4]],
+            "prioritized_improvements": [],
+            "financing_and_incentives": []
+        }
+
+# ---------- Lambda handler ----------
+def lambda_handler(event, context):
+    method, origin, body_json = _parse_http_event(event)
+    if method == "OPTIONS":
+        return {"statusCode": 204, "headers": _cors_headers(origin), "body": ""}
+
+    if method != "POST":
+        return _resp(405, {"ok": False, "error": "Use POST /iesg-assess"}, origin)
+
+    # Optional meta.company_name from client
+    payload = body_json.get("data") if isinstance(body_json.get("data"), dict) else body_json
+    company_name = (payload or {}).get("meta", {}).get("company_name")
+
+    normalized, errors = normalize_iesg_payload(payload or {})
+    if errors:
+        return _resp(400, {"ok": False, "errors": errors}, origin)
+
+    baseline = derive_baseline(normalized)
+    gaps = detect_gaps(normalized)
+
+    kb_context = retrieve_kb_context("i-ESG SME readiness, supply chain ESG basics, Malaysian grants and green financing")
+    report_json = generate_llm_assessment(normalized, baseline, gaps, kb_context, company_name=company_name)
+
+    result = {
+        "ok": True,
+        "framework": "i-ESG (qualitative)",
+        "report": report_json,                 # <- parsed 6-section JSON for your UI
+        "baseline_checklist": baseline,        # transparency/debug
+        "gaps_detected": gaps,                 # transparency/debug
+        "normalized_input": normalized,        # transparency/debug
+        "kb_used": KB_ID_IESG
+    }
+    return _resp(200, result, origin)
