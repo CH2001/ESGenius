@@ -11,7 +11,7 @@ import { Profile, Company, AVAILABLE_FRAMEWORKS } from '@/types/database';
 import type { Assessment } from '@/types/database';
 import { ESGResponse } from '@/types/esg';
 import { NewLambdaService } from '@/services/newLambdaService';
-import { demoAuth, DemoUser } from '@/services/demoAuthService';
+import { demoAuth, DemoUser, mockProfile, mockCompany } from '@/services/demoAuthService';
 import { toast } from 'sonner';
 import { mockESGFrameworks } from '@/data/mockESGFrameworks';
 
@@ -41,13 +41,12 @@ export const AssessmentPage: React.FC<NewAssessmentProps> = ({ onComplete, onBac
   }, []);
 
   const loadProfiles = async (userId: string) => {
-    try {
-      const profilesData = await ProfileService.getProfilesByUser(userId);
-      setProfiles(profilesData);
-    } catch (error) {
-      console.error('Error loading profiles:', error);
-      toast.error('Failed to load profiles');
-    }
+    // Use demo data instead of trying to fetch from database
+    setProfiles([mockProfile as Profile]);
+    
+    // Load companies for the profile
+    const companiesData: Company[] = [mockCompany as Company];
+    setCompanies(companiesData);
   };
 
   const loadCompanies = async (profileId: string) => {
