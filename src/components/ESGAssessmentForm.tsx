@@ -239,7 +239,7 @@ export const ESGAssessmentForm: React.FC<ESGAssessmentFormProps> = ({
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold text-primary">
-                {framework.name} Assessment
+                ESG Assessment
               </h2>
               <Badge variant="outline" className="text-sm">
                 {completedCriteria} / {totalCriteria} completed

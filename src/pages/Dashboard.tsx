@@ -55,13 +55,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
       score: hasCompletedAssessment ? 68 : 0,
       complianceLevel: hasCompletedAssessment ? calculateComplianceLevel(68) : 'needs-foundation',
       status: hasCompletedAssessment ? 'completed' : 'not-started'
-    },
-    {
-      frameworkId: 'sme-guide',
-      frameworkName: 'SME Corp: ESG Quick Guide for MSMEs',
-      score: hasCompletedAssessment ? 78 : 0,
-      complianceLevel: hasCompletedAssessment ? calculateComplianceLevel(78) : 'needs-foundation',
-      status: hasCompletedAssessment ? 'completed' : 'not-started'
     }
   ];
 
