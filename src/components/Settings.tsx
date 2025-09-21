@@ -1,55 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Settings as SettingsIcon, Save, Trash2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { lambdaService } from '@/services/lambdaService';
+import { Settings as SettingsIcon } from 'lucide-react';
 
 export const Settings = () => {
-  const { toast } = useToast();
-  const [endpoint, setEndpoint] = useState(localStorage.getItem('lambda_endpoint') || '');
-  const [accessKeyId, setAccessKeyId] = useState(localStorage.getItem('lambda_access_key') || '');
-  const [secretAccessKey, setSecretAccessKey] = useState(localStorage.getItem('lambda_secret_key') || '');
-  const [region, setRegion] = useState(localStorage.getItem('lambda_region') || 'ap-southeast-1');
-
-  const handleSave = () => {
-    localStorage.setItem('lambda_endpoint', endpoint);
-    localStorage.setItem('lambda_access_key', accessKeyId);
-    localStorage.setItem('lambda_secret_key', secretAccessKey);
-    localStorage.setItem('lambda_region', region);
-
-    lambdaService.configure(endpoint, {
-      accessKeyId,
-      secretAccessKey,
-      region
-    });
-
-    toast({
-      title: "Settings Saved",
-      description: "AWS Lambda configuration has been saved successfully."
-    });
-  };
-
-  const handleClear = () => {
-    setEndpoint('');
-    setAccessKeyId('');
-    setSecretAccessKey('');
-    setRegion('ap-southeast-1');
-    
-    localStorage.removeItem('lambda_endpoint');
-    localStorage.removeItem('lambda_access_key');
-    localStorage.removeItem('lambda_secret_key');
-    localStorage.removeItem('lambda_region');
-
-    toast({
-      title: "Settings Cleared",
-      description: "AWS Lambda configuration has been cleared."
-    });
-  };
-
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -63,60 +19,35 @@ export const Settings = () => {
         </DialogHeader>
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Configuration</CardTitle>
+            <CardTitle className="text-lg">Current Configuration</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="endpoint">Lambda Endpoint URL</Label>
-              <Input
-                id="endpoint"
-                type="url"
-                placeholder="https://your-lambda-endpoint.amazonaws.com"
-                value={endpoint}
-                onChange={(e) => setEndpoint(e.target.value)}
-              />
+              <Label>Lambda Endpoint URL</Label>
+              <div className="p-3 bg-muted rounded-md text-sm font-mono">
+                https://09aoixhak3.execute-api.us-east-1.amazonaws.com
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Using your configured AWS API Gateway endpoint
+              </p>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="region">AWS Region</Label>
-              <Input
-                id="region"
-                placeholder="ap-southeast-1"
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-              />
+              <Label>Authentication</Label>
+              <div className="p-3 bg-muted rounded-md text-sm">
+                Direct API Gateway access (no additional credentials required)
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Your Lambda function is accessible via API Gateway
+              </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="accessKey">Access Key ID</Label>
-              <Input
-                id="accessKey"
-                placeholder="Your AWS Access Key ID"
-                value={accessKeyId}
-                onChange={(e) => setAccessKeyId(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="secretKey">Secret Access Key</Label>
-              <Input
-                id="secretKey"
-                type="password"
-                placeholder="Your AWS Secret Access Key"
-                value={secretAccessKey}
-                onChange={(e) => setSecretAccessKey(e.target.value)}
-              />
-            </div>
-
-            <div className="flex gap-2 pt-4">
-              <Button onClick={handleSave} className="flex-1">
-                <Save className="h-4 w-4 mr-2" />
-                Save
-              </Button>
-              <Button variant="outline" onClick={handleClear}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Clear
-              </Button>
+              <Label>Status</Label>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm">Ready for ESG assessment processing</span>
+              </div>
             </div>
           </CardContent>
         </Card>

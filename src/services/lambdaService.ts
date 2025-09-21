@@ -57,52 +57,12 @@ export interface LambdaResponse {
 }
 
 class LambdaService {
-  private lambdaEndpoint: string = '';
-  private awsCredentials: {
-    accessKeyId: string;
-    secretAccessKey: string;
-    region: string;
-  } | null = null;
-
-  // Configure AWS Lambda endpoint and credentials
-  configure(endpoint: string, credentials?: {
-    accessKeyId: string;
-    secretAccessKey: string;
-    region: string;
-  }) {
-    this.lambdaEndpoint = endpoint;
-    if (credentials) {
-      this.awsCredentials = credentials;
-    }
-  }
-
-  // Get configuration from localStorage (temporary solution)
-  private getConfig() {
-    const endpoint = localStorage.getItem('aws_lambda_endpoint');
-    const accessKeyId = localStorage.getItem('aws_access_key_id');
-    const secretAccessKey = localStorage.getItem('aws_secret_access_key');
-    const region = localStorage.getItem('aws_region');
-
-    if (!endpoint) {
-      throw new Error('AWS Lambda endpoint not configured');
-    }
-
-    return {
-      endpoint,
-      credentials: accessKeyId && secretAccessKey && region ? {
-        accessKeyId,
-        secretAccessKey,
-        region
-      } : null
-    };
-  }
-
   // Submit ESG assessment to AWS Lambda
   async submitESGAssessment(data: LambdaESGRequest): Promise<LambdaResponse> {
     console.log('🚀 ESG Assessment Submission Started');
     console.log('📊 Assessment Data:', {
       businessName: data.business.name,
-      data: data.business, 
+      business: data.business, 
       framework: data.framework,
       responseCount: data.responses.length,
       dataSize: JSON.stringify(data).length + ' bytes'
@@ -119,33 +79,33 @@ class LambdaService {
     });
 
     try {
-      const config = this.getConfig();
-      console.log('✅ Lambda endpoint configured:', config.endpoint);
-      console.log('🔑 AWS credentials configured:', !!config.credentials);
+      // Use your AWS API Gateway endpoint
+      const lambdaEndpoint = 'https://09aoixhak3.execute-api.us-east-1.amazonaws.com';
+      console.log('✅ Using Lambda endpoint:', lambdaEndpoint);
       
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
+      // Flatten all field responses into a single object as expected by your Lambda
+      const assessmentData: { [key: string]: any } = {};
+      data.responses.forEach(response => {
+        Object.keys(response.fieldResponses).forEach(fieldId => {
+          assessmentData[fieldId] = response.fieldResponses[fieldId];
+        });
+      });
 
-      // Add AWS credentials if available
-      if (config.credentials) {
-        headers['X-AWS-Access-Key-Id'] = config.credentials.accessKeyId;
-        headers['X-AWS-Secret-Access-Key'] = config.credentials.secretAccessKey;
-        headers['X-AWS-Region'] = config.credentials.region;
-        console.log('🔐 AWS headers added to request');
-      }
+      console.log('📋 Flattened Assessment Data:', assessmentData);
 
+      // Format request payload to match your Lambda function expectations
       const requestPayload = {
-        action: 'analyze_esg',
-        data
+        assessmentData
       };
 
-      console.log('📡 Sending request to Lambda:', config.endpoint);
-      console.log('📦 Request payload size:', JSON.stringify(requestPayload).length + ' bytes');
+      console.log('📡 Sending request to Lambda:', lambdaEndpoint);
+      console.log('📦 Request payload:', JSON.stringify(requestPayload, null, 2));
       
-      const response = await fetch(config.endpoint, {
+      const response = await fetch(lambdaEndpoint, {
         method: 'POST',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(requestPayload)
       });
 
@@ -156,17 +116,23 @@ class LambdaService {
       });
 
       if (!response.ok) {
-        throw new Error(`Lambda request failed: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('❌ Lambda error response:', errorText);
+        throw new Error(`Lambda request failed: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
-      const result = await response.json();
-      console.log('✅ Lambda processing successful:', {
-        hasScoring: !!result.scoring,
-        hasOpportunities: !!result.opportunities,
-        processingTime: result.processingTime + 's'
-      });
+      const lambdaResult = await response.json();
+      console.log('✅ Raw Lambda response:', lambdaResult);
       
-      return result;
+      // Parse the response from your Lambda function
+      const parsedBody = typeof lambdaResult.body === 'string' ? JSON.parse(lambdaResult.body) : lambdaResult.body;
+      console.log('✅ Parsed Lambda body:', parsedBody);
+
+      // Transform your Lambda response to match the expected LambdaResponse interface
+      const transformedResult = this.transformLambdaResponse(parsedBody, data);
+      console.log('✅ Transformed result:', transformedResult);
+      
+      return transformedResult;
 
     } catch (error) {
       console.error('❌ Lambda service error:', error);
@@ -182,6 +148,68 @@ class LambdaService {
       
       return mockResponse;
     }
+  }
+
+  // Transform your Lambda response format to match the expected interface
+  private transformLambdaResponse(lambdaData: any, originalRequest: LambdaESGRequest): LambdaResponse {
+    const nsrfData = lambdaData.NSRF || {};
+    const iesgData = lambdaData.iESG || {};
+    
+    // Calculate overall score from both frameworks
+    const nsrfScores = nsrfData.scores || {};
+    const iesgScores = iesgData.scores || {};
+    
+    const environmentalScore = nsrfScores.Environmental || 0;
+    const socialScore = nsrfScores.Social || 0;
+    const governanceScore = nsrfScores.Governance || 0;
+    const operationalScore = iesgScores['Operational Excellence'] || 0;
+    
+    const overallScore = Math.round((environmentalScore + socialScore + governanceScore + operationalScore) / 4);
+    
+    // Determine compliance level
+    let complianceLevel: 'Excellent' | 'Good' | 'Fair' | 'Needs Improvement';
+    if (overallScore >= 80) complianceLevel = 'Excellent';
+    else if (overallScore >= 60) complianceLevel = 'Good';
+    else if (overallScore >= 40) complianceLevel = 'Fair';
+    else complianceLevel = 'Needs Improvement';
+
+    // Extract recommendations from both frameworks
+    const combinedRecommendations = `${nsrfData.recommendations || ''}\n\n${iesgData.recommendations || ''}`.trim();
+    
+    return {
+      scoring: {
+        overallScore,
+        environmentalScore,
+        socialScore,
+        governanceScore,
+        complianceLevel,
+        recommendations: [{
+          id: 'lambda_rec_001',
+          type: 'improvement',
+          title: 'AI-Generated ESG Recommendations',
+          description: combinedRecommendations,
+          priority: 'high',
+          estimatedImpact: 'Based on current ESG assessment',
+          timeframe: 'Implementation timeline varies',
+          requiredActions: ['Review AI recommendations', 'Prioritize implementation'],
+          relatedCriteria: ['All assessed criteria'],
+          resources: [{ 
+            title: 'AI Analysis Results', 
+            type: 'document', 
+            description: 'Detailed ESG recommendations from AI analysis' 
+          }]
+        }],
+        gaps: [], // Could be extracted from recommendations if needed
+        actionItems: [{
+          priority: 'High' as const,
+          action: 'Review AI-generated recommendations',
+          timeline: '1 month'
+        }]
+      },
+      opportunities: [], // Could be added if your Lambda returns grant opportunities
+      processingTime: 3.0,
+      confidence: 0.9
+    };
   }
 
   // Mock response for development/testing
