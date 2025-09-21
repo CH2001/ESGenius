@@ -59,16 +59,23 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
   }, []);
 
   const loadCompanies = async () => {
+    console.log('Loading companies...');
     if (currentUser) {
       try {
-        // Try to get companies from database first
-        const companies = await CompanyService.getCompaniesByUser(currentUser.id);
-        if (companies.length > 0) {
-          setCompanies(companies);
-        } else {
-          // Create demo company with proper Supabase user ID
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
+        // Get current Supabase user
+        const { data: { user } } = await supabase.auth.getUser();
+        console.log('Supabase user in loadCompanies:', user?.id);
+        
+        if (user) {
+          // Try to get companies from database using Supabase user ID
+          const companies = await CompanyService.getCompaniesByUser(user.id);
+          console.log('Found companies:', companies.length);
+          
+          if (companies.length > 0) {
+            setCompanies(companies);
+          } else {
+            console.log('No companies found, creating demo company...');
+            // Create demo company with proper Supabase user ID
             const demoCompanyData = {
               ...mockCompany,
               user_id: user.id // Use actual Supabase user ID
@@ -77,17 +84,24 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
             delete (demoCompanyData as any).created_at;
             delete (demoCompanyData as any).updated_at;
             
+            console.log('Creating company with data:', demoCompanyData);
             const createdCompany = await CompanyService.createCompany(demoCompanyData);
             if (createdCompany) {
+              console.log('Company created successfully:', createdCompany);
               setCompanies([createdCompany]);
+            } else {
+              console.log('Failed to create company, using fallback');
+              setCompanies([mockCompany as Company]);
             }
-          } else {
-            // Fallback to mock data if no auth user
-            setCompanies([mockCompany as Company]);
           }
+        } else {
+          console.log('No Supabase user, using fallback mock data');
+          // Fallback to mock data if no auth user
+          setCompanies([mockCompany as Company]);
         }
       } catch (error) {
         console.error('Error loading companies:', error);
+        // Fallback to mock data on error
         setCompanies([mockCompany as Company]);
       }
     }
@@ -183,15 +197,14 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
   if (step === 'company-selection') {
     return (
       <div className="container mx-auto py-8 space-y-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="outline" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">Start ESG Assessment</h1>
-            <p className="text-muted-foreground">Select a company to assess</p>
-          </div>
+        <Button variant="outline" onClick={onBack} className="mb-6">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Dashboard
+        </Button>
+        
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">Start ESG Assessment</h1>
+          <p className="text-muted-foreground">Select a company to assess</p>
         </div>
 
         <Card>
@@ -205,7 +218,7 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
             {companies.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground mb-4">No companies found. Please create a company first.</p>
-                <Button onClick={() => window.location.href = '/profile'}>
+                <Button onClick={() => window.location.href = '/company-profile'}>
                   Go to Company Profile
                 </Button>
               </div>
