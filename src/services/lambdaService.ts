@@ -124,8 +124,18 @@ class LambdaService {
       const lambdaResult = await response.json();
       console.log('✅ Raw Lambda response:', lambdaResult);
       
-      // Parse the response from your Lambda function
-      const parsedBody = typeof lambdaResult.body === 'string' ? JSON.parse(lambdaResult.body) : lambdaResult.body;
+      // Handle different response formats
+      let parsedBody;
+      if (lambdaResult.body) {
+        // AWS API Gateway format with statusCode and body
+        parsedBody = typeof lambdaResult.body === 'string' ? JSON.parse(lambdaResult.body) : lambdaResult.body;
+      } else if (lambdaResult.NSRF || lambdaResult.iESG) {
+        // Direct Lambda response format
+        parsedBody = lambdaResult;
+      } else {
+        // Fallback to lambdaResult itself
+        parsedBody = lambdaResult;
+      }
       console.log('✅ Parsed Lambda body:', parsedBody);
 
       // Transform your Lambda response to match the expected LambdaResponse interface
