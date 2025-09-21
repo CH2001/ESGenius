@@ -10,6 +10,8 @@ export interface Profile {
   contact_email?: string;
   contact_phone?: string;
   address?: string;
+  established_year?: number;
+  employees?: number;
   created_at: string;
   updated_at: string;
 }

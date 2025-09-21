@@ -163,6 +163,8 @@ export type Database = {
           contact_phone: string | null
           created_at: string
           description: string | null
+          employees: number | null
+          established_year: number | null
           id: string
           industry: string | null
           organization_name: string
@@ -176,6 +178,8 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           description?: string | null
+          employees?: number | null
+          established_year?: number | null
           id?: string
           industry?: string | null
           organization_name: string
@@ -189,6 +193,8 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           description?: string | null
+          employees?: number | null
+          established_year?: number | null
           id?: string
           industry?: string | null
           organization_name?: string

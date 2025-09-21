@@ -19,7 +19,7 @@ export const ProfilePage: React.FC = () => {
   const [editingCompany, setEditingCompany] = useState<string | null>(null);
   const [showNewProfile, setShowNewProfile] = useState(false);
   const [showNewCompany, setShowNewCompany] = useState<string | null>(null);
-  const [newProfile, setNewProfile] = useState<Partial<Profile & { established_year?: number; employees?: number }>>({});
+  const [newProfile, setNewProfile] = useState<Partial<Profile>>({});
   const [newCompany, setNewCompany] = useState<Partial<Company>>({});
 
   useEffect(() => {
