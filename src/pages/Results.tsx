@@ -37,8 +37,8 @@ export const Results: React.FC<ResultsProps> = ({
   // Extract data from Lambda results or use defaults
   const framework = results?.framework || 'ESG Assessment';
   const report = results?.report || {};
-  const readinessStage = report.header?.readiness_stage || 'Unknown';
-  const executiveSummary = report.executive_summary || '';
+  const readinessStage = report.header?.readiness_stage || results?.header?.readiness_stage || 'Unknown';
+  const executiveSummary = report.executive_summary || results?.executive_summary || '';
   
   // Calculate scores from baseline checklist
   const calculateCategoryScore = (categoryData: any) => {
@@ -168,10 +168,37 @@ export const Results: React.FC<ResultsProps> = ({
               </div>
 
               {/* Executive Summary */}
-              {executiveSummary && (
+              {executiveSummary && executiveSummary !== "(LLM JSON parse failed; baseline-only summary returned.)" && (
                 <div className="pt-4 border-t">
                   <h4 className="font-semibold mb-2">Executive Summary</h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">{executiveSummary}</p>
+                </div>
+              )}
+
+              {/* Gaps and Risks */}
+              {(results?.report?.gaps_and_risks || results?.gaps_and_risks) && (results?.report?.gaps_and_risks || results?.gaps_and_risks).length > 0 && (
+                <div className="pt-4 border-t">
+                  <h4 className="font-semibold mb-3">Key Gaps & Risks Identified</h4>
+                  <div className="grid gap-3">
+                    {(results?.report?.gaps_and_risks || results?.gaps_and_risks).map((risk: any, index: number) => (
+                      <div key={index} className="p-4 rounded-lg border bg-card">
+                        <div className="flex items-start justify-between mb-2">
+                          <h5 className="font-medium text-sm">{risk.gap}</h5>
+                          <Badge 
+                            variant={
+                              risk.urgency === 'High' ? 'destructive' :
+                              risk.urgency === 'Medium' ? 'secondary' :
+                              'outline'
+                            }
+                            className="text-xs"
+                          >
+                            {risk.urgency} Priority
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{risk.why_it_matters}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
