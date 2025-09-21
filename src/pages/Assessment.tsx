@@ -309,11 +309,14 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onComplete, onBa
                     disabled={framework.id !== 'esg-i' && framework.id !== 'nsrf'} // ESG-i and NSRF are implemented
                   />
                   <div className="flex-1">
-                    <label htmlFor={framework.id} className={`cursor-pointer ${framework.id !== 'esg-i' ? 'opacity-60' : ''}`}>
+                    <label htmlFor={framework.id} className={`cursor-pointer ${framework.id !== 'esg-i' && framework.id !== 'nsrf' ? 'opacity-60' : ''}`}>
                       <h4 className="font-semibold">{framework.name}</h4>
                       <p className="text-sm text-muted-foreground">{framework.description}</p>
-                      {framework.id !== 'esg-i' && (
+                      {framework.id !== 'esg-i' && framework.id !== 'nsrf' && (
                         <p className="text-xs text-orange-600 mt-1">Coming soon</p>
+                      )}
+                      {framework.id === 'nsrf' && (
+                        <p className="text-xs text-green-600 mt-1">Document analysis available</p>
                       )}
                     </label>
                   </div>
